@@ -3,16 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@material-ui/core": "^4.11.3",
     "@testing-library/jest-dom": "^5.11.9",
     "@testing-library/react": "^11.2.5",
     "@testing-library/user-event": "^12.7.1",
+    "create-react-app": "^4.0.3",
     "react": "^17.0.1",
+    "react-bootstrap": "^1.0.0-beta.14",
     "react-dom": "^17.0.1",
     "react-scripts": "4.0.2",
-    "web-vitals": "^1.1.0",
-    "bootstrap": "^4.3.1",
-    "react-bootstrap": "^1.0.0-beta.14",
-    "styled-components": "^4.3.2"
+    "styled-components": "^4.3.2",
+    "web-vitals": "^1.1.0"
   },
   "scripts": {
     "start": "react-scripts start",

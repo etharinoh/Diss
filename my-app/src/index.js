@@ -11,9 +11,7 @@ const user = {
   firstName: 'ethan',
   lastName: 'hall'
 }
-
 const fullname = 'Ethan Hall';
-
 const divelement = <div tabIndex="0"></div>
 const imgelement = <img src={user.avatarURl}></img>
 const element = (
@@ -23,6 +21,7 @@ const element = (
     {imgelement}
   </div>
 );
+
 
 //functions
 function getGreeting(user){
@@ -37,6 +36,8 @@ function formatName(user){
   return user.firstName + ' ' + user.lastName;
 }
 
+
+//conditional if else, (condition ? true : false)
 
 
 class Clock extends React.Component{

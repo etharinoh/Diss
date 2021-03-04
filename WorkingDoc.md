@@ -11,5 +11,4 @@
 
 * @TODO 
     * Remove unneeded icons from manifest.json, keeping for reference
-
-* Thinking about changing home page to swap interactive tool and switching. Then add routing to the bottom row
+    * Thinking about changing home page to swap interactive tool and switching. Then add routing to the bottom row

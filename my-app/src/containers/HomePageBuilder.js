@@ -5,12 +5,19 @@ import { Grid, SvgIcon, Paper, makeStyles} from '@material-ui/core';
 
 import {ReactComponent as Topology_Img} from '../assets/Topologies_Redirect_All.svg';
 import {ReactComponent as Switching_Img} from '../assets/Switching_Redirect_All.svg';
+import {ReactComponent as Interactive_Img} from '../assets/Interactive_Redirect.svg';
 
 
 const useStyles = makeStyles((theme) => ({
-    grid:{
+    gridTop:{
         maxWidth: '50%',
         maxHeight:'50%',
+        flexGrow:1,
+        flexBasis:'50%',
+        
+    },
+    gridBotton:{
+        maxWidth: '33%',
         flexGrow:1,
         flexBasis:'50%',
         
@@ -28,13 +35,17 @@ const useStyles = makeStyles((theme) => ({
               background: "#efefef"
             },
       },
+    svg_img:{
+        width:'100%',
+        height: '200px'
+    },
   }));
 
 function FormRow1(){
     const classes = useStyles();
    return ( 
    <React.Fragment >
-            <Grid item xs={4} className={classes.grid} style={{padding: '10px'}}>
+            <Grid item className={classes.gridTop} style={{padding: '10px'}}>
                 <Paper className={classes.paper} >
                     <h1>Website Name</h1>
                     <p>This is an online revision tool which i am creating as my third year project, it is supposed to be used to educate students on topics such as
@@ -44,10 +55,11 @@ function FormRow1(){
                 </Paper>
             </Grid>
 
-            <Grid item xs={4} className={classes.grid} style={{padding: '10px'}}>
-                <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
-                    <Switching_Img />
-                    <h1>Switching Revision</h1>
+            <Grid item className={classes.gridTop} style={{padding: '10px'}}>
+                
+                <Paper className={classes.paper_btn} onClick={event => window.location.href="/interactive"}>
+                    <Interactive_Img className={classes.svg_img} />
+                    <h1>Try it yourself</h1>
                 </Paper>
             </Grid>
       </React.Fragment>
@@ -57,15 +69,21 @@ function FormRow2(){
     const classes = useStyles();
    return ( 
    <React.Fragment>
-            <Grid item xs={4} className={classes.grid} >
-                <Paper className={classes.paper_btn} onClick={event => window.location.href="/interactive"}>
-                    
-                    <h1>Try it yourself</h1>
-                </Paper>
+            <Grid item xs={4} className={classes.gridBotton} >
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
+                    <Switching_Img className={classes.svg_img}/>
+                    <h1>Switching Revision</h1>
+                </Paper> 
             </Grid>
-            <Grid item xs={4} className={classes.grid} >
+            <Grid item xs={4} className={classes.gridBotton} >
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
+                    <Switching_Img className={classes.svg_img}/>
+                    <h1>Routing Revision</h1>
+                </Paper> 
+            </Grid>
+            <Grid item xs={4} className={classes.gridBotton} >
                 <Paper className={classes.paper_btn} onClick={event => window.location.href="/topologies"}>
-                    <Topology_Img />
+                    <Topology_Img className={classes.svg_img}/>
                     <h1>Topologies Revision</h1>
                 </Paper>
             </Grid>

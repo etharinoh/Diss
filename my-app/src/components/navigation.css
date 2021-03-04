@@ -1,0 +1,12 @@
+#Nav {
+    background-color: #414141;
+    border-radius: 5px;
+}
+#Nav button {
+    padding: 0px 100px 0 10px;
+    font-size: x-large;
+    color: white;
+}
+#Nav :hover{
+    background-color: #AFF2AF;
+}

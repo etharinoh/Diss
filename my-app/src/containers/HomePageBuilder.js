@@ -3,9 +3,10 @@ import Navigation from "../components/navigation";
 import React from 'react';
 import { Grid, SvgIcon, Paper, makeStyles} from '@material-ui/core';
 
-import {ReactComponent as Topology_Img} from '../assets/Topologies_Redirect_All.svg';
-import {ReactComponent as Switching_Img} from '../assets/Switching_Redirect_All.svg';
-import {ReactComponent as Interactive_Img} from '../assets/Interactive_Redirect.svg';
+import {ReactComponent as Topology_Img} from '../assets/Images/Topologies_Redirect_All.svg';
+import {ReactComponent as Switching_Img} from '../assets/Images/Switching_Redirect_All.svg';
+import {ReactComponent as Interactive_Img} from '../assets/Images/Interactive_Redirect.svg';
+import {ReactComponent as Routing_Img} from '../assets/Images/Routing_Redirect_All.svg';
 
 
 const useStyles = makeStyles((theme) => ({
@@ -32,7 +33,7 @@ const useStyles = makeStyles((theme) => ({
         textAlign: 'center',
         background: '#707070',
         "&:hover": {
-              background: "#efefef"
+              background: "#AFF2AF"
             },
       },
     svg_img:{
@@ -50,8 +51,13 @@ function FormRow1(){
                     <h1>Website Name</h1>
                     <p>This is an online revision tool which i am creating as my third year project, it is supposed to be used to educate students on topics such as
                     network topologies and switching methods. It also has an interactve tool allowinng students to create their own network topologies and perform 
-                    switching methods on it. {"\n"} Please click one of the three links to head to their corresponding areas:</p> 
-                    {/* Maybe add bullet point on each section that you can redirect to*/}
+                    switching methods on it.Please click one of the three links to head to their corresponding areas:</p> 
+                    <ul>
+                        <li><b>Interactive Tool</b> - This allows you to create your own topology and perform different switching / routing methods on it.</li>
+                        <li><b>Switching Methods</b> - This has information on switching methods desribing how they are performed and their properties.</li>
+                        <li><b>Routing Methods</b> - This has information on routing methods desribinghow they are performed and their properties.</li>
+                        <li><b>Topologies Revision</b> - Here you are able to view common topology designs and see their advantages and disadvantages.</li>
+                    </ul>
                 </Paper>
             </Grid>
 
@@ -59,7 +65,7 @@ function FormRow1(){
                 
                 <Paper className={classes.paper_btn} onClick={event => window.location.href="/interactive"}>
                     <Interactive_Img className={classes.svg_img} />
-                    <h1>Try it yourself</h1>
+                    <h1>Interactive Tool</h1>
                 </Paper>
             </Grid>
       </React.Fragment>
@@ -77,7 +83,7 @@ function FormRow2(){
             </Grid>
             <Grid item xs={4} className={classes.gridBotton} >
                <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
-                    <Switching_Img className={classes.svg_img}/>
+                    <Routing_Img className={classes.svg_img}/>
                     <h1>Routing Revision</h1>
                 </Paper> 
             </Grid>

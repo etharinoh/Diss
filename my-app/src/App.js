@@ -1,12 +1,12 @@
 import React from 'react';
 import {BrowserRouter as Router,Route,Switch, Redirect } from 'react-router-dom';
 
-import CircuitSwitchBuilder from './containers/CircuitSwitchBuilder';
+import CircuitSwitchBuilder from './containers/Switching/CircuitSwitchBuilder';
 import HomePageBuilder from "./containers/HomePageBuilder";
-import InteractiveBuilder from './containers/InteractiveBuilder';
-import PacketSwitchBuilder from './containers/PacketSwitchBuilder';
-import TopologiesBuilder from './containers/TopologiesBuilder';
-import RoutingBuilder from './containers/RoutingBuilder';
+import InteractiveBuilder from './containers/InteractiveTool/InteractiveBuilder';
+import PacketSwitchBuilder from './containers/Switching/PacketSwitchBuilder';
+import TopologiesBuilder from './containers/Topologies/TopologiesBuilder';
+import RoutingBuilder from './containers/Routing/RoutingBuilder';
 
 function App(){
   return(

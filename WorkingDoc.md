@@ -10,5 +10,15 @@
     * Segoe UI
 
 * @TODO 
-    * Remove unneeded icons from manifest.json, keeping for reference
-    * Thinking about changing home page to swap interactive tool and switching. Then add routing to the bottom row
+[] Maintennance
+    [] Remove unneeded icons from manifest.json, keeping for reference
+
+[] Interactive Tool
+    [] Resize the interactive tool screen (10% Selector Buttons, 70-75% Three.js Canvas, remaining 15-20%, inputs + Console)
+    [] Change scene to react component look at medium article for this
+    [] Maybe use raycaster to find where the mouse is looking on the scene, then use the mouse click to add a node at the point from raycaster??
+
+[] Topologies
+    [] Fill in content
+    [] Sort out some SVG's with missing textures
+    [] Quiz?

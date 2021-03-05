@@ -15,7 +15,7 @@ import {ReactComponent as Tree} from '../../assets/Images/Topologies/Topology_Tr
 const TopologiesBuilder = (props) => (
     <div>
         <Navigation/>
-        <div id="Content">
+        <div className="Content">
             <h1>Topologies</h1>
 
             <h2>Point-To-Point</h2>

@@ -20,8 +20,6 @@ class InteractiveBuilder extends Component{
 
         scene.add(cube);
         camera.position.z = 10;
-        camera.position.x = 10;
-        camera.position.y = 5;
         var animate = function () {
           requestAnimationFrame( animate );
           renderer.render( scene, camera );
@@ -50,7 +48,7 @@ function addCircle(event){
     const circle = new THREE.Shape();
      
     mouse.x = ( event.clientX / 1600 ) * 2;
-	mouse.y = ( event.clientY / 800 ) * 2;
+    mouse.y = - ( event.clientY / 800 ) * 2;
 
     //alert("x:"+mouse.x+"  y:"+mouse.y);
 

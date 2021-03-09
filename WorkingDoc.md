@@ -15,9 +15,9 @@
     - [ ] Remove unneeded icons from manifest.json, keeping for reference
 
 - [ ] Interactive Tool
-  -   [] Resize the interactive tool screen (10% Selector Buttons, 70-75% Three.js Canvas, remaining 15-20%, inputs + Console)
-    - [] Change scene to react component look at medium article for this
-    - [] Maybe use raycaster to find where the mouse is looking on the scene, then use the mouse click to add a node at the point from raycaster?
+  -   [ ] Resize the interactive tool screen (10% Selector Buttons, 70-75% Three.js Canvas, remaining 15-20%, inputs + Console)
+    - [ ] Change scene to react component look at medium article for this
+    - [ ] Maybe use raycaster to find where the mouse is looking on the scene, then use the mouse click to add a node at the point from raycaster?
 
 - [ ] Topologies
     - [ ] Fill in content

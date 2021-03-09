@@ -76,13 +76,13 @@ function FormRow2(){
    return ( 
    <React.Fragment>
             <Grid item xs={4} className={classes.gridBotton} >
-               <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/switching"}>
                     <Switching_Img className={classes.svg_img}/>
                     <h1>Switching Revision</h1>
                 </Paper> 
             </Grid>
             <Grid item xs={4} className={classes.gridBotton} >
-               <Paper className={classes.paper_btn} onClick={event => window.location.href="/packet"}>
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/routing"}>
                     <Routing_Img className={classes.svg_img}/>
                     <h1>Routing Revision</h1>
                 </Paper> 

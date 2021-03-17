@@ -36,3 +36,6 @@
 - [ ] Routing
     - [ ] Distance Vector
     - [ ] Dijkstra's
+
+
+   change intersects so that it filters out any lines, chose closest x,y position

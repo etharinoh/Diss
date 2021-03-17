@@ -51,13 +51,14 @@ function FormRow1(){
                     <h1>Website Name</h1>
                     <p>This is an online revision tool which i am creating as my third year project, it is supposed to be used to educate students on topics such as
                     network topologies and switching methods. It also has an interactve tool allowinng students to create their own network topologies and perform 
-                    switching methods on it.Please click one of the three links to head to their corresponding areas:</p> 
+                    switching methods on it.Please click one of the three links to head to their corresponding areas:
                     <ul>
                         <li><b>Interactive Tool</b> - This allows you to create your own topology and perform different switching / routing methods on it.</li>
                         <li><b>Switching Methods</b> - This has information on switching methods desribing how they are performed and their properties.</li>
                         <li><b>Routing Methods</b> - This has information on routing methods desribinghow they are performed and their properties.</li>
                         <li><b>Topologies Revision</b> - Here you are able to view common topology designs and see their advantages and disadvantages.</li>
                     </ul>
+                    </p> 
                 </Paper>
             </Grid>
 

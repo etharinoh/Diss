@@ -4,23 +4,23 @@
     margin-right: .5%;
     margin-top: .5%;
     border-radius: 2%;
-    height: 85vh;
+    height: 88vh;
 }
 #canvas{
     margin-top: .5%;
     position: static;
     height: auto;
-    width: 74%;
-    height: 85vh;
+    width: 70%;
+    height: 88vh;
     padding: 0;
 }
 #right{
-    width: 15%;
+    width: 19%;
     background-color: #181818;
     margin-left: .5%;
     margin-top: .5%;
     border-radius: 2%;
-    height: 85vh
+    height: 88vh
 }
 #Interactive_Container{
     flex-wrap: wrap;
@@ -29,13 +29,13 @@
 }
 
 #init_val{
-    height: 60%
+    height: 53vh
 }
 
 #console{
-    background-color: #3b3b3b;
-    height: 40%;
+    height:35vh;
     width: 100%;
+    height:fit-content
 }
 #consoleText{
     color:white;
@@ -59,7 +59,7 @@ p, label{
     color:white;
 }
 #AddNode, #RemoveNode, #RemoveConnection, #AddConnection{
-    height: 25%;
+    height: 22vh;
     width: 100%;
     color: white;
     background-color: #3b3b3b;

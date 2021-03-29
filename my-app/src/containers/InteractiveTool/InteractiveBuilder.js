@@ -7,7 +7,10 @@ import React from 'react';
 import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup } from "@material-ui/core"
 import "./Interactive.css"
 
+import  Connection  from  "./Connection.js"
 
+let nodeMap = new Map();
+let connectionMap = new Map();
 
 //Creates an enum for the different options for the selected button
 const button_options = {
@@ -46,10 +49,9 @@ class Tool extends Component {
     window.addEventListener('resize', listenResize, false);
 
 
-    camera = new THREE.PerspectiveCamera(10, 1, 0.1, 50)
+    camera = new THREE.PerspectiveCamera(10, 1, 0.1, 50000)
     camera.position.z = 12;
     camera.updateProjectionMatrix();
-  raycaster.setFromCamera(mouse, camera);
 
     var animate = function () {
       requestAnimationFrame(animate);
@@ -59,33 +61,42 @@ class Tool extends Component {
   }
 
 
-  points = [];
+  nodes = [];
 
 
   clickHandler = (event) => {
-    const material = new THREE.LineBasicMaterial({ color: 0x0000ff });
+    const material = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
 
     switch (buttonChecked) {
       case button_options.ADDNODE:
         addNode(event);
         break;
       case button_options.ADDCONNECT:
-        var current = addConnection(event);
-        if (this.points.length == 0) {
-          this.points.push(current);
-          consoleAdd("Point added at: " + current);
+        var selectedNode = addConnection(event);
+        if (this.nodes.length == 0) {
+          this.nodes.push(selectedNode);
+          consoleAdd("Point added at: " + selectedNode.x + ", " + selectedNode.y);
         }
-        else {
-          this.points.push(current);
-          const geometry = new THREE.BufferGeometry().setFromPoints(this.points);
+        else if(!selectedNode.position.equals(this.nodes[0].position)){
+          this.nodes.push(selectedNode);
+          var startNode = this.nodes[0].position; 
+          var endNode = this.nodes[1].position; 
+          var points = [this.nodes[0].position, this.nodes[1].position]
+          const geometry = new THREE.BufferGeometry().setFromPoints(points);
+          console.log.apply(geometry);
           const line = new THREE.Line(geometry, material);
+          // line.name()
+          var newConnect = new Connection(this.nodes[0],this.nodes[1],line);
+          console.log(newConnect);
           scene.add(line);
+          connectionMap.set()
           var animate = function () {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
           };
           animate();
           consoleAdd("Connection added");
+          this.nodes =[];
         }
         break;
       case button_options.REMOVENODE:
@@ -106,8 +117,73 @@ class Tool extends Component {
     )
   }
 }
+function listenResize() {
+
+  //camera.aspect = (container.clientWidth / container.clientHeight);
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+
+}
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+var nodeCount=1;
+function addNode(event) {
+  {
+    mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
 
 
+    const radius = 0.1;
+
+    const segments = 100;
+    const geometry = new THREE.CircleGeometry(radius, segments);
+    const material = new THREE.MeshBasicMaterial({ color: 0xF2AFAF });
+    const node = new THREE.Mesh(geometry, material);
+    node.position.set(mouse.x, mouse.y, 1);
+    node.name = nodeCount++;
+    scene.add(node);
+    nodeMap.set(node.name,node);
+    var animate = function () {
+      requestAnimationFrame(animate);
+      renderer.render(scene, camera);
+    };
+    animate();
+
+    consoleAdd("Node no: "+ node.name +" added at: " + node.position.x + ", " + node.position.y);
+  }
+}
+var intersects = [];
+function addConnection(event) {
+  //draw a line by selecting two circle, raycaster, highlight
+  mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
+    mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
+  intersects = [];
+  raycaster.setFromCamera(mouse, camera);
+  console.log(mouse.x , mouse.y);
+  intersects = raycaster.intersectObjects(scene.children);
+  console.log(intersects);
+  intersects[0].object.material.color.set(0xff0000);
+  return intersects[0].object;
+}
+
+//If the click isnt on a 
+function removeNode(event) {
+  //If a node is clicked, remove the node and any connections that it has
+}
+function removeConnection(event) {
+  //If a connection is clicked delete it
+}
+
+
+
+/**
+ * 
+ * Interactive builder class used for the actual page setup
+ * 
+ * Exports the page to the router.
+ * 
+ */
 class InteractiveBuilder extends Component {
   constructor(props) {
     super(props);
@@ -150,6 +226,13 @@ class InteractiveBuilder extends Component {
   }
 }
 
+/**
+ * 
+ * This is consmetics which are needed for the left and right panels
+ * 
+ * NEED MOVING INTO SEPARATE FOLDERS AND USE PROPS / STATE
+ * 
+ */
 const useStyles = makeStyles((theme) => ({
   label: {
     margin: theme.spacing(1),
@@ -174,90 +257,6 @@ function ButtonsGroup() {
     </div>
   )
 }
-
-function InitialValues() {
-  const classes = useStyles();
-  const [method, setMethod] = React.useState("");
-
-  const handleChange = (event) => {
-    setMethod(event.target.value);
-  }
-  return (
-    <div id="initial_container">
-      <InputLabel id="lbl_Sw_Method" className={classes.label}>Switching Method</InputLabel>
-      <Select labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange}>
-        <MenuItem value="Circuit">Circuit Switching</MenuItem>
-        <MenuItem value="Packet">Packet Switching</MenuItem>
-      </Select>
-    </div>
-  )
-}
-
-
-function listenResize() {
-
-  //camera.aspect = (container.clientWidth / container.clientHeight);
-  camera.updateProjectionMatrix();
-  renderer.setSize(container.clientWidth, container.clientHeight);
-
-}
-
-const raycaster = new THREE.Raycaster();
-const mouse = new THREE.Vector2();
-
-
-
-function addNode(event) {
-  {
-    mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
-    mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
-
-
-    const radius = 0.1;
-
-    const segments = 100;
-    const geometry = new THREE.CircleGeometry( radius, segments );
-    const material = new THREE.MeshBasicMaterial( { color: 0xF2AFAF } );
-    const circle = new THREE.Mesh( geometry, material );
-    circle.position.set(mouse.x,mouse.y,1);
-    scene.add(circle);
-
-    var animate = function () {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-
-    consoleAdd("Circle added at: " + circle.position.x + ", " + circle.position.y);
-  }
-}
-var intersects = [];
-function addConnection(event) {
-  //draw a line by selecting two circle, raycaster, highlight
-  intersects = [];
-  raycaster.setFromCamera( mouse, camera );
-  intersects = raycaster.intersectObjects(scene.children);
-  console.log(intersects);
-  intersects[0].object.material.color.set(0xff0000);
-  return intersects[0].object.position;
-}
-
-//If the click isnt on a 
-function removeNode(event) {
-  //If a node is clicked, remove the node and any connections that it has
-}
-function removeConnection(event) {
-  //If a connection is clicked delete it
-}
-
-function consoleClear() {
-  //Get document text and clear
-  document.getElementById("consoleText").value = "";
-}
-function consoleAdd(toAdd) {
-  document.getElementById("consoleText").value = ">> " + toAdd + "\n" + document.getElementById("consoleText").value;
-}
-
 function addNodeClick() {
   if (buttonChecked == button_options.ADDNODE) {
     //Clear colours
@@ -304,8 +303,43 @@ function removeConnectionClick() {
   consoleAdd("Button Selected: " + buttonChecked);
 }
 
+/**
+ * This is the initial values inputs on the right hand side, used for controloling simulation
+ * @returns initial values form / inputs
+ * 
+ * 
+ */
+function InitialValues() {
+  const classes = useStyles();
+  const [method, setMethod] = React.useState("");
 
-function clearButton() {
-  consoleClear();
+  const handleChange = (event) => {
+    setMethod(event.target.value);
+  }
+  return (
+    <div id="initial_container">
+      <InputLabel id="lbl_Sw_Method" className={classes.label}>Switching Method</InputLabel>
+      <Select labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange}>
+        <MenuItem value="Circuit">Circuit Switching</MenuItem>
+        <MenuItem value="Packet">Packet Switching</MenuItem>
+      </Select>
+    </div>
+  )
 }
+
+
+
+/**
+ * Console functions to add and clear to the console on the right hand side, providing updates to the user on internal functions
+ * 
+ * Unsure if needs moving / own file
+ */
+function consoleClear() {
+  //Get document text and clear
+  document.getElementById("consoleText").value = "";
+}
+function consoleAdd(toAdd) {
+  document.getElementById("consoleText").value = ">> " + toAdd + "\n" + document.getElementById("consoleText").value;
+}
+
 export default InteractiveBuilder;

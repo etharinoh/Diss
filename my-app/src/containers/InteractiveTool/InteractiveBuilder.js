@@ -62,7 +62,7 @@ class Tool extends Component {
   }
 
 
-  
+
 
 
   clickHandler = (event) => {
@@ -132,36 +132,44 @@ function addNode(event) {
 }
 var intersects = [];
 var nodes = [];
-var connectionCount =0;
+var connectionCount = 0;
 function addConnection(event) {
   const MATERIAL = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
   var selectedNode = findNode(event);
-  if (nodes.length == 0) {
-    nodes.push(selectedNode);
-    consoleAdd("Point added at: " + selectedNode.x + ", " + selectedNode.y);
+  if (selectedNode == 0) {
+    console.log("not a viable node selected")
   }
-  else if (!selectedNode.position.equals(nodes[0].position)) {
-    nodes.push(selectedNode);
-    var startNode = new THREE.Vector3(nodes[0].position.x, nodes[0].position.y, 0.9);
-    var endNode = new THREE.Vector3(nodes[1].position.x, nodes[1].position.y, 0.9);
-    var points = [startNode, endNode]
-    const geometry = new THREE.BufferGeometry().setFromPoints(points);
-    const line = new THREE.Line(geometry, MATERIAL);
-    line.name = connectionCount++;
-    var newConnect = new Connection(nodes[0], nodes[1], line);
-    console.log(newConnect);
-    scene.add(line);
-    connectionMap.set(line.name, line);
-    nodes.forEach(element => {
-      element.material.color.set(0xF2AFAF)
-    });
-    var animate = function () {
-      requestAnimationFrame(animate);
-      renderer.render(scene, camera);
-    };
-    animate();
-    consoleAdd("Connection added");
-    nodes = [];
+  else {
+    if (nodes.length == 0) {
+      nodes.push(selectedNode);
+      consoleAdd("Point added at: " + selectedNode.x + ", " + selectedNode.y);
+    }
+    else if (!selectedNode.position.equals(nodes[0].position)) {
+      nodes.push(selectedNode);
+      var startNode = new THREE.Vector3(nodes[0].position.x, nodes[0].position.y, 0.9);
+      var endNode = new THREE.Vector3(nodes[1].position.x, nodes[1].position.y, 0.9);
+      var points = [startNode, endNode];
+      console.log(points);
+      const geometry = new THREE.BufferGeometry().setFromPoints(points);
+      
+
+      const line = new THREE.Line(geometry, MATERIAL);
+      line.name = connectionCount++;
+      var newConnect = new Connection(nodes[0], nodes[1], line);
+      console.log(newConnect);
+      scene.add(line);
+      connectionMap.set(line.name, newConnect);
+      nodes.forEach(element => {
+        element.material.color.set(0xF2AFAF)
+      });
+      var animate = function () {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+      };
+      animate();
+      consoleAdd("Connection added");
+      nodes = [];
+    }
   }
 }
 function findNode(event) {
@@ -173,46 +181,68 @@ function findNode(event) {
   console.log(mouse.x, mouse.y);
   intersects = raycaster.intersectObjects(scene.children);
   //closest node
-  console.log(intersects);
-  intersects[0].object.material.color.set(0xff0000);
-  return intersects[0].object;
+  if (intersects[0]) {
+    
+    if (intersects[0].object.type == "Mesh") {
+      console.log(intersects);
+    intersects[0].object.material.color.set(0xff0000);
+      return intersects[0].object;
+    }
+    else {
+      return 0;
+    }
+  }
+  else {
+    return 0;
+  }
+
 }
 
 //If the click isnt on a 
 function removeNode(event) {
   //If a node is clicked, remove the node and any connections that it has
+  var toRemove = findNode(event);
+
+  for (let value of connectionMap.values()) {
+    if ((toRemove == value.fromNode) || (toRemove == value.toNode)) {
+      removeSelected(value.connectorObj);
+    }
+  }
+  nodeMap.delete(toRemove.name);
+  scene.remove(toRemove);
 }
-function findConnection(event){
+
+function removeConnection(event) {
+  //If a connection is clicked delete it
+  var selectedConnection = findConnection(event);
+  if (selectedConnection == 0) {
+    consoleAdd("No connection found here")
+  }
+  else {
+    removeSelected(selectedConnection);
+
+  }
+}
+function findConnection(event) {
   mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
   mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
   intersects = [];
   raycaster.setFromCamera(mouse, camera);
   console.log(mouse.x, mouse.y);
-  intersects = raycaster.intersectObjects(scene.children);
+  intersects = raycaster.intersectObjects(scene.children, true);
   //closest node
   console.log(intersects);
   intersects[0].object.material.color.set(0xff0000);
-  if (intersects[0].object.type = "Line"){
+  if (intersects[0].object.type == "Line") {
     return intersects[0].object;
   }
-  else{
+  else {
     return 0;
   }
 }
-function removeConnection(event) {
-  //If a connection is clicked delete it
-  var selectedConnection = findConnection(event);
-  if (selectedConnection == 0){
-    consoleAdd("No connection found here")
-  }
-  else{
-    removeSelected(selectedConnection);
-    
-  }
-}
-function removeSelected(selected){
-    connectionMap.delete(selected.name);
-    scene.remove(selected);
+function removeSelected(selected) {
+  connectionMap.delete(selected.name);
+  scene.remove(selected);
 }
 
 

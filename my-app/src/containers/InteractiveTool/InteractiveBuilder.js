@@ -314,7 +314,15 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: "#3b3b3b",
     height: "100%"
 
-  }
+  },
+  text: {
+    margin: "normal"
+  },
+  animate: {
+    backgroundColor: "#AFF2AF",
+    borderColor: "#AFF2AF",
+    right: "",
+  },
 }));
 
 function ButtonsGroup() {
@@ -373,6 +381,19 @@ function removeConnectionClick() {
   consoleAdd("Button Selected: " + buttonChecked);
 }
 
+//Initial Values variables.
+var Switching_Method;
+var PropDelay;
+var MsgLength;
+var TransRate;
+var CircSetupTime;
+var HeaderSize;
+var PktSize;
+var PktRoutingDelay;
+
+//SenderReciver pairs
+var SndRecArray;
+
 /**
  * This is the initial values inputs on the right hand side, used for controloling simulation
  * @returns initial values form / inputs
@@ -388,11 +409,19 @@ function InitialValues() {
   }
   return (
     <div id="initial_container">
-      <InputLabel id="lbl_Sw_Method" className={classes.label}>Switching Method</InputLabel>
-      <Select labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange}>
+      <InputLabel id="lbl_Sw_Method" className={classes.label} >Switching Method</InputLabel>
+      <Select fullWidth labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange} margin="dense">
         <MenuItem value="Circuit">Circuit Switching</MenuItem>
         <MenuItem value="Packet">Packet Switching</MenuItem>
       </Select>
+      <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense"/>
+      <Button variant="contained" className={classes.animate}>Animate</Button>
     </div>
   )
 }

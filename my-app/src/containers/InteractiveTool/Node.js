@@ -12,5 +12,8 @@ export default class Node {
     addConnection(connection){
         this.connectionArr.push(connection);
     }
-
+    
+    getConnectionArr(){
+        return this.connectionArr;
+    }
 }

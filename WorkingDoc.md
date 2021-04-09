@@ -1,7 +1,7 @@
 * Colors:
     * Main background: #808080 (light grey)
     * Navbar Background: #414141 (Dark Grey)
-    * Active Tab / Destination: #AFF2AF (light green)
+    * Active Tab / Sender: #AFF2AF (light green)
     * Node: #F2AFAF (light red)
     * Destination: #AFB1F2 (blue)
     * Highlight / Sent Message / Packet: #AFF2F0 (light blue)

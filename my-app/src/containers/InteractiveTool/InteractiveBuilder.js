@@ -7,7 +7,11 @@ import React from 'react';
 import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup } from "@material-ui/core"
 import "./Interactive.css"
 
-import Connection from "./Connection.js"
+import Connection from "./Connection.js";
+import Node from "./Node.js";
+import SndRec from "./SenderReciever.js";
+import Message from "./Message.js";
+import Packet from "./Packet.js";
 import { Vector3 } from "three";
 
 let nodeMap = new Map();
@@ -19,6 +23,8 @@ const button_options = {
   REMOVENODE: "removeNode",
   ADDCONNECT: "addConnection",
   REMOVECONNECT: "removeConnection",
+  SENDREC: "senderReciever",
+  MOVENODE: "moveNode",
   NONE: "none"
 }
 //Holds the enum value for which button is selected, used for onclick.
@@ -80,6 +86,12 @@ class Tool extends Component {
         break;
       case button_options.REMOVECONNECT:
         removeConnection(event);
+        break;
+      case button_options.SENDREC:
+
+        break;
+      case button_options.MOVENODE:
+
         break;
       default:
         consoleAdd("No mode selected")
@@ -151,7 +163,7 @@ function addConnection(event) {
       var points = [startNode, endNode];
       console.log(points);
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
-      
+
 
       const line = new THREE.Line(geometry, MATERIAL);
       line.name = connectionCount++;
@@ -182,10 +194,10 @@ function findNode(event) {
   intersects = raycaster.intersectObjects(scene.children);
   //closest node
   if (intersects[0]) {
-    
+
     if (intersects[0].object.type == "Mesh") {
       console.log(intersects);
-    intersects[0].object.material.color.set(0xff0000);
+      intersects[0].object.material.color.set(0xff0000);
       return intersects[0].object;
     }
     else {
@@ -245,6 +257,37 @@ function removeSelected(selected) {
   scene.remove(selected);
 }
 
+function moveNode(event) {
+  //find node
+  //select where to move it to
+  //change position
+  //Redraw connections Take the point on line that 
+}
+var sender, reciever;
+function sendRevPair(event){
+  var chosenNode = findNode(event);
+  if (!sender){
+    //find node
+    //set as sender
+    sender = chosenNode;
+    //change colour to green
+    chosenNode.object.material.color.set("#AFF2AF");
+  }
+  else{
+    //find node
+    //set as reciver
+    
+    
+    reciever = chosenNode;
+    //change colour to blue
+    chosenNode.object.material.color.set("#AFB1F2");
+    //create snd rec pair, add to sender reciver array, change sender and reciver to null
+    var sendRecPair = new sendRec(sender,reciever);
+    SndRecArray.push(sendRecPair);
+    sender = null;
+    reciever = null;
+  }
+}
 
 
 /**
@@ -332,6 +375,8 @@ function ButtonsGroup() {
       <Button className={useStyles().state_button} onClick={addConnectionClick} id="AddConnection"> Add Connection</Button>
       <Button className={useStyles().state_button} onClick={removeNodeClick} id="RemoveNode"> Remove Node</Button>
       <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection"> Remove Connection</Button>
+      <Button className={useStyles().state_button} onClick={moveNodeClick} id="MoveNode"> Move Node</Button>
+      <Button className={useStyles().state_button} onClick={sndRecPairClick} id="SendRecivered"> Create Sender Reciver</Button>
     </div>
   )
 }
@@ -380,6 +425,28 @@ function removeConnectionClick() {
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+function moveNodeClick() {
+  if (buttonChecked == button_options.MOVENODE) {
+    //Clear colours
+    buttonChecked = button_options.NONE;
+  }
+  else {
+    //Clear button method, change to selected
+    buttonChecked = button_options.MOVENODE;
+  }
+  consoleAdd("Button Selected: " + buttonChecked);
+}
+function sndRecPairClick() {
+  if (buttonChecked == button_options.SENDREC) {
+    //Clear colours
+    buttonChecked = button_options.NONE;
+  }
+  else {
+    //Clear button method, change to selected
+    buttonChecked = button_options.SENDREC;
+  }
+  consoleAdd("Button Selected: " + buttonChecked);
+}
 
 //Initial Values variables.
 var Switching_Method;
@@ -392,7 +459,7 @@ var PktSize;
 var PktRoutingDelay;
 
 //SenderReciver pairs
-var SndRecArray;
+var SndRecArray = [];
 
 /**
  * This is the initial values inputs on the right hand side, used for controloling simulation
@@ -415,13 +482,14 @@ function InitialValues() {
         <MenuItem value="Packet">Packet Switching</MenuItem>
       </Select>
       <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense"/>
-      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense"/>
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense"/>
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense"/>
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense"/>
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense"/>
+      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" />
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" />
       <Button variant="contained" className={classes.animate}>Animate</Button>
+      
     </div>
   )
 }

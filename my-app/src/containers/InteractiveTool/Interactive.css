@@ -1,37 +1,34 @@
 #left{
-    width: 25vh;
+    width: 40vh;
     background-color: #181818;
     margin-right: .5%;
     margin-top: .5%;
     border-radius: 2%;
-    height: 93vh;
+    height: 92vh;
 }
 #canvas{
     margin-top: .5%;
     position: static;
     height: auto;
     width: 110vh;
-    height: 93vh;
+    height: 92vh;
     padding: 0;
 }
 #right{
-    width: 19%;
+    width: 40vh;
     background-color: #181818;
     margin-left: .5%;
     margin-top: .5%;
     border-radius: 2%;
-    height: 93vh
+    height: 92vh
 }
 #Interactive_Container{
     flex-wrap: wrap;
     display: flex;
     height: 100%;
 }
-input{
-    color: white;
-}
 #init_val{
-    height: 55vh;
+    height: 53vh;
     padding-left: 2%;
     padding-right: 2%;
 }
@@ -39,7 +36,6 @@ input{
 #console{
     height:40vh;
     width: 100%;
-    height:fit-content
 }
 #consoleText{
     color:white;
@@ -49,19 +45,7 @@ input{
 p, label{
     color: white;
 }
-#initial_container{
-    border: 2px;
-    border-style: solid;
-    height: 55vh;
-}
 .MuiInputBase-root{
     width: 90%;
-    background-color: #3b3b3b;
-    color:white;
-}
-#AddNode, #RemoveNode, #RemoveConnection, #AddConnection{
-    height: 22vh;
-    width: 100%;
-    color: white;
     background-color: #3b3b3b;
 }

@@ -3,8 +3,7 @@ import Navigation from "../../components/navigation";
 import * as THREE from "three";
 import { Component } from "react";
 import React from 'react';
-
-import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup } from "@material-ui/core"
+import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup, Grid } from "@material-ui/core"
 import "./Interactive.css"
 
 import Connection from "./Connection.js";
@@ -149,7 +148,7 @@ function addConnection(event) {
   const MATERIAL = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
   var selectedNode = findNode(event);
   if (selectedNode == 0) {
-    console.log("not a viable node selected")
+    consoleAdd("not a viable node selected")
   }
   else {
     if (nodes.length == 0) {
@@ -161,14 +160,12 @@ function addConnection(event) {
       var startNode = new THREE.Vector3(nodes[0].position.x, nodes[0].position.y, 0.9);
       var endNode = new THREE.Vector3(nodes[1].position.x, nodes[1].position.y, 0.9);
       var points = [startNode, endNode];
-      console.log(points);
       const geometry = new THREE.BufferGeometry().setFromPoints(points);
 
 
       const line = new THREE.Line(geometry, MATERIAL);
       line.name = connectionCount++;
       var newConnect = new Connection(nodes[0], nodes[1], line);
-      console.log(newConnect);
       scene.add(line);
       connectionMap.set(line.name, newConnect);
       nodes.forEach(element => {
@@ -190,13 +187,11 @@ function findNode(event) {
   mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
   intersects = [];
   raycaster.setFromCamera(mouse, camera);
-  console.log(mouse.x, mouse.y);
   intersects = raycaster.intersectObjects(scene.children);
   //closest node
   if (intersects[0]) {
 
     if (intersects[0].object.type == "Mesh") {
-      console.log(intersects);
       intersects[0].object.material.color.set(0xff0000);
       return intersects[0].object;
     }
@@ -240,10 +235,8 @@ function findConnection(event) {
   mouse.y = - ((event.clientY - renderer.domElement.offsetTop) / renderer.domElement.clientHeight) * 2 + 1;
   intersects = [];
   raycaster.setFromCamera(mouse, camera);
-  console.log(mouse.x, mouse.y);
   intersects = raycaster.intersectObjects(scene.children, true);
   //closest node
-  console.log(intersects);
   intersects[0].object.material.color.set(0xff0000);
   if (intersects[0].object.type == "Line") {
     return intersects[0].object;
@@ -266,7 +259,6 @@ function moveNode(event) {
 var sender, reciever;
 function sendRevPair(event) {
   var chosenNode = findNode(event);
-  console.log(chosenNode, sender, reciever);
   if (chosenNode != 0) {
     if (!sender) {
       //find node
@@ -359,10 +351,10 @@ const useStyles = makeStyles((theme) => ({
     color: "white"
   },
   state_button: {
-    width: "100%",
+    width: "20vh",
     color: "white",
     backgroundColor: "#3b3b3b",
-    height: "100%"
+    height: "23vh"
 
   },
   text: {
@@ -373,7 +365,7 @@ const useStyles = makeStyles((theme) => ({
     borderColor: "#AFF2AF",
     right: "",
   },
-  initVal:{
+  initVal: {
     color: 'white',
   },
 }));
@@ -381,14 +373,20 @@ const useStyles = makeStyles((theme) => ({
 function ButtonsGroup() {
   return (
     <div>
-      <Button className={useStyles().state_button} onClick={addNodeClick} id="AddNode"> Add Node</Button>
-      <Button className={useStyles().state_button} onClick={addConnectionClick} id="AddConnection"> Add Connection</Button>
-      <Button className={useStyles().state_button} onClick={removeNodeClick} id="RemoveNode"> Remove Node</Button>
-      <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection"> Remove Connection</Button>
-      <Button className={useStyles().state_button} onClick={moveNodeClick} id="MoveNode"> Move Node</Button>
-      <Button className={useStyles().state_button} onClick={sndRecPairClick} id="SendRecieved"> Create Sender Reciver Pair</Button>
-      <Button className={useStyles().state_button} onClick={inspectNodeClick} id="InspectNode"> Inspect Node</Button>
-      <Button className={useStyles().state_button} onClick={clear} id="ClearAll"> Clear All</Button>
+      <Grid item >
+        <Button className={useStyles().state_button} onClick={addNodeClick} id="AddNode"> Add Node</Button>
+        <Button className={useStyles().state_button} onClick={addConnectionClick} id="AddConnection"> Add Connection</Button>
+        <Button className={useStyles().state_button} onClick={removeNodeClick} id="RemoveNode"> Remove Node</Button>
+        <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection"> Remove Connection</Button>
+      </Grid>
+      <Grid item>
+        <Button className={useStyles().state_button} onClick={moveNodeClick} id="MoveNode"> Move Node</Button>
+        <Button className={useStyles().state_button} onClick={sndRecPairClick} id="SendRecieved"> Create Sender Reciver Pair</Button>
+        <Button className={useStyles().state_button} onClick={inspectNodeClick} id="InspectNode"> Inspect Node</Button>
+        <Button className={useStyles().state_button} onClick={clear} id="ClearAll"> Clear All</Button>
+      </Grid>
+
+
     </div>
   )
 }
@@ -459,7 +457,7 @@ function sndRecPairClick() {
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
-function inspectNodeClick(){
+function inspectNodeClick() {
   //Output the node, name of the node, connnections, all info that is known.
   if (buttonChecked == button_options.INSPECT) {
     //Clear colours
@@ -471,7 +469,7 @@ function inspectNodeClick(){
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
-function clear(){
+function clear() {
   consoleClear();
   buttonChecked = button_options.NONE;
   //clear everythinng of use, maps, queues connections, objects in scene
@@ -502,9 +500,41 @@ function InitialValues() {
 
   const handleChange = (event) => {
     setMethod(event.target.value);
+    Switching_Method = event.target.value;
+    //@TODO disable the correct fields
+
+    //if circuit enable - circuit setup disable - header, packet, routing delay
+    if (Switching_Method == "Circuit") {
+      CircSetupTime = document.getElementById("text_Circuit_Setup").disabled = false;
+      HeaderSize = document.getElementById("text_Header_Size").disabled = true;
+      PktSize = document.getElementById("text_Packet_Size").disabled = true;
+      PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = true;
+    }
+    else {    //if packet either  enable - header, packet, routing delay disable - circuit setup
+      CircSetupTime = document.getElementById("text_Circuit_Setup").disabled = true;
+
+      HeaderSize = document.getElementById("text_Header_Size").disabled = false;
+      PktSize = document.getElementById("text_Packet_Size").disabled = false;
+      PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = false;
+    }
   }
   const animateSimulation = (event) => {
-    
+    //take all values from below and 
+    PropDelay = document.getElementById("text_Prop_Delay").value;
+    MsgLength = document.getElementById("text_Msg_Length").value;
+    TransRate = document.getElementById("text_Transmission_Rate").value;
+
+    if (Switching_Method == "Circuit") {
+      CircSetupTime = document.getElementById("text_Circuit_Setup").value;
+    }
+    else {
+      HeaderSize = document.getElementById("text_Header_Size").value;
+      PktSize = document.getElementById("text_Packet_Size").value;
+      PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+    }
+
+
+
   }
   return (
     <div id="initial_container">
@@ -513,13 +543,13 @@ function InitialValues() {
         <MenuItem value="Circuit">Circuit Switching</MenuItem>
         <MenuItem value="Packet">Packet Switching</MenuItem>
       </Select>
-      <TextField fullWidth  id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
-      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal} />
       <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

@@ -1,0 +1,34 @@
+{
+  "files": {
+    "main.css": "/Diss/static/css/main.b3bb77c4.chunk.css",
+    "main.js": "/Diss/static/js/main.882e32f3.chunk.js",
+    "main.js.map": "/Diss/static/js/main.882e32f3.chunk.js.map",
+    "runtime-main.js": "/Diss/static/js/runtime-main.faeaf018.js",
+    "runtime-main.js.map": "/Diss/static/js/runtime-main.faeaf018.js.map",
+    "static/js/2.4a788b82.chunk.js": "/Diss/static/js/2.4a788b82.chunk.js",
+    "static/js/2.4a788b82.chunk.js.map": "/Diss/static/js/2.4a788b82.chunk.js.map",
+    "index.html": "/Diss/index.html",
+    "static/css/main.b3bb77c4.chunk.css.map": "/Diss/static/css/main.b3bb77c4.chunk.css.map",
+    "static/js/2.4a788b82.chunk.js.LICENSE.txt": "/Diss/static/js/2.4a788b82.chunk.js.LICENSE.txt",
+    "static/media/Interactive_Redirect.87f9012c.svg": "/Diss/static/media/Interactive_Redirect.87f9012c.svg",
+    "static/media/Routing_Redirect_All.f3a7b571.svg": "/Diss/static/media/Routing_Redirect_All.f3a7b571.svg",
+    "static/media/Switching_Circuit.bbb48923.svg": "/Diss/static/media/Switching_Circuit.bbb48923.svg",
+    "static/media/Switching_Packet.db58ae03.svg": "/Diss/static/media/Switching_Packet.db58ae03.svg",
+    "static/media/Switching_Redirect_All.366ad33d.svg": "/Diss/static/media/Switching_Redirect_All.366ad33d.svg",
+    "static/media/Topologies_Redirect_All.59e8b571.svg": "/Diss/static/media/Topologies_Redirect_All.59e8b571.svg",
+    "static/media/Topology_Bus.6e26db4f.svg": "/Diss/static/media/Topology_Bus.6e26db4f.svg",
+    "static/media/Topology_Hybrid.bb5151bf.svg": "/Diss/static/media/Topology_Hybrid.bb5151bf.svg",
+    "static/media/Topology_Mesh_Full.65f22da5.svg": "/Diss/static/media/Topology_Mesh_Full.65f22da5.svg",
+    "static/media/Topology_Mesh_Partial.9263fd3b.svg": "/Diss/static/media/Topology_Mesh_Partial.9263fd3b.svg",
+    "static/media/Topology_Point_To_Point.9d5b2d8e.svg": "/Diss/static/media/Topology_Point_To_Point.9d5b2d8e.svg",
+    "static/media/Topology_Ring.768e7109.svg": "/Diss/static/media/Topology_Ring.768e7109.svg",
+    "static/media/Topology_Star.1618d879.svg": "/Diss/static/media/Topology_Star.1618d879.svg",
+    "static/media/Topology_Tree.6f5b5032.svg": "/Diss/static/media/Topology_Tree.6f5b5032.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.faeaf018.js",
+    "static/js/2.4a788b82.chunk.js",
+    "static/css/main.b3bb77c4.chunk.css",
+    "static/js/main.882e32f3.chunk.js"
+  ]
+}

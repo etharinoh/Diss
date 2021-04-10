@@ -1,13 +1,9 @@
 export default class Node {
     constructor(name, circle) {
-        this.sender = Send;
-        this.reciever = Rec;
+        this.name = name;
+        this.circleObject = circle;
         this.connectionArr = [];
-    }
-    constructor(name, circle, arr) {
-        this.sender = Send;
-        this.reciever = Rec;
-        this.connectionArr = arr;
+        this.packetQueue = [];
     }
     addConnection(connection){
         this.connectionArr.push(connection);
@@ -15,5 +11,15 @@ export default class Node {
     
     getConnectionArr(){
         return this.connectionArr;
+    }
+
+    enqueue(toAdd){
+        this.packetQueue.push(toAdd);
+    }
+    dequeue(){
+        this.packetQueue.shift();
+    }
+    isEmpty(){
+        return this.packetQueue.length == 0;
     }
 }

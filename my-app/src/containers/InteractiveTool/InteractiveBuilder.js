@@ -88,10 +88,10 @@ class Tool extends Component {
         removeConnection(event);
         break;
       case button_options.SENDREC:
-
+        sendRevPair(event);
         break;
       case button_options.MOVENODE:
-
+        moveNode(event);
         break;
       default:
         consoleAdd("No mode selected")
@@ -264,29 +264,36 @@ function moveNode(event) {
   //Redraw connections Take the point on line that 
 }
 var sender, reciever;
-function sendRevPair(event){
+function sendRevPair(event) {
   var chosenNode = findNode(event);
-  if (!sender){
-    //find node
-    //set as sender
-    sender = chosenNode;
-    //change colour to green
-    chosenNode.object.material.color.set("#AFF2AF");
+  console.log(chosenNode, sender, reciever);
+  if (chosenNode != 0) {
+    if (!sender) {
+      //find node
+      //set as sender
+      sender = chosenNode;
+      //change colour to green
+      chosenNode.material.color.set("#AFF2AF");
+    }
+    else {
+      //find node
+      //set as reciver
+
+
+      reciever = chosenNode;
+      //change colour to blue
+      chosenNode.material.color.set("#AFB1F2");
+      //create snd rec pair, add to sender reciver array, change sender and reciver to null
+      var sendRecPair = new SndRec(sender, reciever);
+      SndRecArray.push(sendRecPair);
+      sender = null;
+      reciever = null;
+    }
   }
-  else{
-    //find node
-    //set as reciver
-    
-    
-    reciever = chosenNode;
-    //change colour to blue
-    chosenNode.object.material.color.set("#AFB1F2");
-    //create snd rec pair, add to sender reciver array, change sender and reciver to null
-    var sendRecPair = new sendRec(sender,reciever);
-    SndRecArray.push(sendRecPair);
-    sender = null;
-    reciever = null;
+  else {
+    consoleAdd("No node found near here")
   }
+
 }
 
 
@@ -376,7 +383,9 @@ function ButtonsGroup() {
       <Button className={useStyles().state_button} onClick={removeNodeClick} id="RemoveNode"> Remove Node</Button>
       <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection"> Remove Connection</Button>
       <Button className={useStyles().state_button} onClick={moveNodeClick} id="MoveNode"> Move Node</Button>
-      <Button className={useStyles().state_button} onClick={sndRecPairClick} id="SendRecivered"> Create Sender Reciver</Button>
+      <Button className={useStyles().state_button} onClick={sndRecPairClick} id="SendRecieved"> Create Sender Reciver Pair</Button>
+      <Button className={useStyles().state_button} onClick={inspectNodeClick} id="InspectNode"> Inspect Node</Button>
+      <Button className={useStyles().state_button} onClick={clear} id="ClearAll"> Clear All</Button>
     </div>
   )
 }
@@ -447,6 +456,23 @@ function sndRecPairClick() {
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+function inspectNodeClick(){
+  //Output the node, name of the node, connnections, all info that is known.
+  if (buttonChecked == button_options.INSPECT) {
+    //Clear colours
+    buttonChecked = button_options.NONE;
+  }
+  else {
+    //Clear button method, change to selected
+    buttonChecked = button_options.INSPECT;
+  }
+  consoleAdd("Button Selected: " + buttonChecked);
+}
+function clear(){
+  consoleClear();
+  buttonChecked = button_options.NONE;
+  //clear everythinng of use, maps, queues connections, objects in scene
+}
 
 //Initial Values variables.
 var Switching_Method;
@@ -474,6 +500,9 @@ function InitialValues() {
   const handleChange = (event) => {
     setMethod(event.target.value);
   }
+  const animateSimulation = (event) => {
+    
+  }
   return (
     <div id="initial_container">
       <InputLabel id="lbl_Sw_Method" className={classes.label} >Switching Method</InputLabel>
@@ -488,8 +517,8 @@ function InitialValues() {
       <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" />
       <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" />
       <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" />
-      <Button variant="contained" className={classes.animate}>Animate</Button>
-      
+      <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
+
     </div>
   )
 }

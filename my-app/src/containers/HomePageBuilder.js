@@ -52,19 +52,20 @@ function FormRow1(){
                     <p>This is an online revision tool which i am creating as my third year project, it is supposed to be used to educate students on topics such as
                     network topologies and switching methods. It also has an interactve tool allowinng students to create their own network topologies and perform 
                     switching methods on it.Please click one of the three links to head to their corresponding areas:
+                    </p> 
                     <ul>
                         <li><b>Interactive Tool</b> - This allows you to create your own topology and perform different switching / routing methods on it.</li>
                         <li><b>Switching Methods</b> - This has information on switching methods desribing how they are performed and their properties.</li>
                         <li><b>Routing Methods</b> - This has information on routing methods desribinghow they are performed and their properties.</li>
                         <li><b>Topologies Revision</b> - Here you are able to view common topology designs and see their advantages and disadvantages.</li>
                     </ul>
-                    </p> 
+                    
                 </Paper>
             </Grid>
 
             <Grid item className={classes.gridTop} style={{padding: '10px'}}>
                 
-                <Paper className={classes.paper_btn} onClick={event => window.location.href="/interactive"}>
+                <Paper className={classes.paper_btn} onClick={event => window.location.href="/Diss/#/interactive"}>
                     <Interactive_Img className={classes.svg_img} />
                     <h1>Interactive Tool</h1>
                 </Paper>
@@ -77,19 +78,19 @@ function FormRow2(){
    return ( 
    <React.Fragment>
             <Grid item xs={4} className={classes.gridBotton} >
-               <Paper className={classes.paper_btn} onClick={event => window.location.href="/switching"}>
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/Diss/#/switching"}>
                     <Switching_Img className={classes.svg_img}/>
                     <h1>Switching Revision</h1>
                 </Paper> 
             </Grid>
             <Grid item xs={4} className={classes.gridBotton} >
-               <Paper className={classes.paper_btn} onClick={event => window.location.href="/routing"}>
+               <Paper className={classes.paper_btn} onClick={event => window.location.href="/Diss/#/routing"}>
                     <Routing_Img className={classes.svg_img}/>
                     <h1>Routing Revision</h1>
                 </Paper> 
             </Grid>
             <Grid item xs={4} className={classes.gridBotton} >
-                <Paper className={classes.paper_btn} onClick={event => window.location.href="/topologies"}>
+                <Paper className={classes.paper_btn} onClick={event => window.location.href="/Diss/#/topologies"}>
                     <Topology_Img className={classes.svg_img}/>
                     <h1>Topologies Revision</h1>
                 </Paper>
@@ -101,6 +102,7 @@ function FormRow2(){
 
 function HomePageBuilder() {
     const classes = useStyles();
+    console.log(process.env.PUBLIC_URL)
     return(
         <div>
         <Navigation />

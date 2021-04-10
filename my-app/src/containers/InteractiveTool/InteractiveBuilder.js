@@ -373,6 +373,9 @@ const useStyles = makeStyles((theme) => ({
     borderColor: "#AFF2AF",
     right: "",
   },
+  initVal:{
+    color: 'white',
+  },
 }));
 
 function ButtonsGroup() {
@@ -510,13 +513,13 @@ function InitialValues() {
         <MenuItem value="Circuit">Circuit Switching</MenuItem>
         <MenuItem value="Packet">Packet Switching</MenuItem>
       </Select>
-      <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" />
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" />
+      <TextField fullWidth  id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal}/>
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal}/>
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

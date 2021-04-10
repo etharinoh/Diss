@@ -9,7 +9,7 @@ import RoutingBuilder from './containers/Routing/RoutingBuilder';
 
 function App(){
   return(
-      <Router>
+      <Router basename={process.env.PUBLIC_URL}>
         <Switch>
           <Route exact path="/" component={HomePageBuilder}></Route>
           <Route exact path="/switching" component={SwitchingBuilder}></Route>

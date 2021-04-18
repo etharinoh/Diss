@@ -170,10 +170,10 @@ function addConnection(event) {
       var newConnect = new Connection(nodes[0], nodes[1], line);
       scene.add(line);
       connectionMap.set(line.name, newConnect);
-      
+
       nodes.forEach(element => {
         element.material.color.set(0xF2AFAF)
-        var  node = nodeMap.get(element.name);
+        var node = nodeMap.get(element.name);
         node.addConnection(newConnect);
       });
       var animate = function () {
@@ -182,6 +182,7 @@ function addConnection(event) {
       };
       animate();
       consoleAdd("Connection added");
+      sendMessage(newConnect);
       nodes = [];
     }
   }
@@ -266,23 +267,18 @@ function sendRevPair(event) {
   var chosenNode = findNode(event);
   if (chosenNode != 0) {
     if (!sender) {
-      //find node
-      //set as sender
       sender = chosenNode;
-      //change colour to green
       chosenNode.material.color.set("#AFF2AF");
     }
     else {
-      //find node
-      //set as reciver
 
 
       reciever = chosenNode;
-      //change colour to blue
       chosenNode.material.color.set("#AFB1F2");
-      //create snd rec pair, add to sender reciver array, change sender and reciver to null
-      var sendRecPair = new SndRec(sender, reciever);
+
+      var sendRecPair = new SndRec(nodeMap.get(sender.name), nodeMap.get(reciever.name));
       SndRecArray.push(sendRecPair);
+      console.log(SndRecArray);
       sender = null;
       reciever = null;
     }
@@ -493,6 +489,61 @@ var PktRoutingDelay;
 //SenderReciver pairs
 var SndRecArray = [];
 
+  function startCircuitSw() {
+    //findbest route
+    SndRecArray.forEach(pair => findBestRoute(pair));
+
+    //Get all the connection objects and change their color to 
+  }
+  function findBestRoute(sendRecPair) {
+    var allRoutes = findRoutes(sendRecPair);
+    var shortestSteps = 0;
+    var bestRoute;
+    allRoutes.forEach(async function (route) {
+      if (route.length < shortestSteps) {
+        bestRoute = route;
+      }
+    })
+    return bestRoute;
+  }
+  function findRoutes(senderRecieverPair) {
+    var start = senderRecieverPair.sender;
+    var end = senderRecieverPair.reciever;
+    var allRoutes = [];
+    var currentRoute = [];
+    //from start node check all connections, if 
+    for (const connection in start.getConnectionArr()) { 
+      if(connection.fromNode == end){
+
+      }
+    }
+  }
+
+  function sendMessage(connection) {
+    const geometry = new THREE.PlaneGeometry(.1, .015, 32); //MsgLength / 10000
+    const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
+    const plane = new THREE.Mesh(geometry, material);
+    plane.position.set(connection.fromNode.position.x, connection.fromNode.position.y , 0.95);
+    
+
+
+    var position = { x: connection.fromNode.position.x, y: connection.fromNode.position.y };
+    var target = { x: connection.toNode.position.x, y: connection.toNode.position.y };
+    
+    var tween = new TWEEN.Tween(position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
+    console.log(plane);
+    plane.rotateZ(Math.atan2(target.y - position.y, target.x - position.x)); // Trigonometry 
+    scene.add(plane);//radians change to
+    tween.onUpdate(function () {
+      plane.position.x = position.x;
+      plane.position.y = position.y;
+    }
+    );
+    consoleAdd("sending message from node: "+connection.fromNode.name+" to "+ connection.toNode.name);
+    tween.start();
+    //use tween.delay(); for (packet routing delay)
+  }
+
 /**
  * This is the initial values inputs on the right hand side, used for controloling simulation
  * @returns initial values form / inputs
@@ -523,10 +574,10 @@ function InitialValues() {
       PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = false;
     }
   }
-  function validateInput(){
-    if(Switching_Method){
+  function validateInput() {
+    if (Switching_Method) {
       if (Switching_Method == "Circuit") {
-        if((!CircSetupTime)&&(CircSetupTime.isNan())){
+        if ((!CircSetupTime) && (CircSetupTime.isNan())) {
           document.getElementById("text_Circuit_Setup")()
         }
       }
@@ -536,7 +587,7 @@ function InitialValues() {
         PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
       }
     }
-    else{
+    else {
       return false;
     }
   }
@@ -555,48 +606,9 @@ function InitialValues() {
       PktSize = document.getElementById("text_Packet_Size").value;
       PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
     }
-    
-  }
-  function startCircuitSw(){
-    //findbest route
-    SndRecArray.forEach(pair => findBestRoute(pair))
-  }
-  function findBestRoute(sendRecPair){
-    var allRoutes = findRoutes(sendRecPair);
-    var shortestSteps = 0;
-    var bestRoute;
-    allRoutes.forEach(async function(route){
-      if(route.length < shortestSteps){
-        bestRoute = route;
-      }
-    })
-    return bestRoute;
-  }
-  function findRoutes(senderRecieverPair){
-    var start = senderRecieverPair.sender;
-    var end = senderRecieverPair.reciever;
 
-    //from start node check all connections, if 
-  }
-  function sendMessage(connection){
-    const geometry = new THREE.PlaneGeometry( MsgLength /10000, .01, 32 );
-    const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
-    const plane = new THREE.Mesh( geometry, material );
-    scene.add( plane );
-    
-    var position = { x : 0, y: 0 };
-    var target = { x : 1, y: .5 };
-    var tween = new TWEEN.Tween(position).to(target, 2000);
-    plane.rotation(position.angleTo(target));
-    tween.onUpdate(function(){
-      plane.position.x = position.x;
-      plane.position.y = position.y;
-  }
-  );
-  tween.start();
   }
 
-  
   return (
     <div id="initial_container">
       <InputLabel id="lbl_Sw_Method" className={classes.label} >Switching Method</InputLabel>
@@ -607,10 +619,10 @@ function InitialValues() {
       <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
       <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal} />
       <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled />
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled />
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled />
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled />
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

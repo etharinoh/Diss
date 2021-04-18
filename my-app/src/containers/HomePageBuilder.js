@@ -54,10 +54,10 @@ function FormRow1(){
                     switching methods on it.Please click one of the three links to head to their corresponding areas:
                     </p> 
                     <ul>
-                        <li><b>Interactive Tool</b> - This allows you to create your own topology and perform different switching / routing methods on it.</li>
-                        <li><b>Switching Methods</b> - This has information on switching methods desribing how they are performed and their properties.</li>
-                        <li><b>Routing Methods</b> - This has information on routing methods desribinghow they are performed and their properties.</li>
-                        <li><b>Topologies Revision</b> - Here you are able to view common topology designs and see their advantages and disadvantages.</li>
+                        <li id="HomeText"><b>Interactive Tool</b> - This allows you to create your own topology and perform different switching / routing methods on it.</li>
+                        <li id="HomeText"><b>Switching Methods</b> - This has information on switching methods desribing how they are performed and their properties.</li>
+                        <li id="HomeText"><b>Routing Methods</b> - This has information on routing methods desribinghow they are performed and their properties.</li>
+                        <li id="HomeText"><b>Topologies Revision</b> - Here you are able to view common topology designs and see their advantages and disadvantages.</li>
                     </ul>
                     
                 </Paper>

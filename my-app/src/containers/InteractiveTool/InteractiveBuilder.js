@@ -11,7 +11,7 @@ import Node from "./Node.js";
 import SndRec from "./SenderReciever.js";
 import Message from "./Message.js";
 import Packet from "./Packet.js";
-import { Vector3 } from "three";
+import { TWEEN } from "three/examples/jsm/libs/tween.module.min";
 
 let nodeMap = new Map();
 let connectionMap = new Map();
@@ -62,6 +62,7 @@ class Tool extends Component {
     var animate = function () {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
+      TWEEN.update();
     };
     animate();
   }
@@ -131,7 +132,8 @@ function addNode(event) {
     node.position.set(mouse.x, mouse.y, 1);
     node.name = nodeCount++;
     scene.add(node);
-    nodeMap.set(node.name, node);
+    var newNode = new Node(node.name, node);
+    nodeMap.set(node.name, newNode);
     var animate = function () {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
@@ -168,8 +170,11 @@ function addConnection(event) {
       var newConnect = new Connection(nodes[0], nodes[1], line);
       scene.add(line);
       connectionMap.set(line.name, newConnect);
+      
       nodes.forEach(element => {
         element.material.color.set(0xF2AFAF)
+        var  node = nodeMap.get(element.name);
+        node.addConnection(newConnect);
       });
       var animate = function () {
         requestAnimationFrame(animate);
@@ -518,6 +523,23 @@ function InitialValues() {
       PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = false;
     }
   }
+  function validateInput(){
+    if(Switching_Method){
+      if (Switching_Method == "Circuit") {
+        if((!CircSetupTime)&&(CircSetupTime.isNan())){
+          document.getElementById("text_Circuit_Setup")()
+        }
+      }
+      else {
+        HeaderSize = document.getElementById("text_Header_Size").value;
+        PktSize = document.getElementById("text_Packet_Size").value;
+        PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+      }
+    }
+    else{
+      return false;
+    }
+  }
   const animateSimulation = (event) => {
     //take all values from below and 
     PropDelay = document.getElementById("text_Prop_Delay").value;
@@ -526,30 +548,69 @@ function InitialValues() {
 
     if (Switching_Method == "Circuit") {
       CircSetupTime = document.getElementById("text_Circuit_Setup").value;
+      startCircuitSw();
     }
     else {
       HeaderSize = document.getElementById("text_Header_Size").value;
       PktSize = document.getElementById("text_Packet_Size").value;
       PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
     }
-
-
-
+    
   }
+  function startCircuitSw(){
+    //findbest route
+    SndRecArray.forEach(pair => findBestRoute(pair))
+  }
+  function findBestRoute(sendRecPair){
+    var allRoutes = findRoutes(sendRecPair);
+    var shortestSteps = 0;
+    var bestRoute;
+    allRoutes.forEach(async function(route){
+      if(route.length < shortestSteps){
+        bestRoute = route;
+      }
+    })
+    return bestRoute;
+  }
+  function findRoutes(senderRecieverPair){
+    var start = senderRecieverPair.sender;
+    var end = senderRecieverPair.reciever;
+
+    //from start node check all connections, if 
+  }
+  function sendMessage(connection){
+    const geometry = new THREE.PlaneGeometry( MsgLength /10000, .01, 32 );
+    const material = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+    const plane = new THREE.Mesh( geometry, material );
+    scene.add( plane );
+    
+    var position = { x : 0, y: 0 };
+    var target = { x : 1, y: .5 };
+    var tween = new TWEEN.Tween(position).to(target, 2000);
+    plane.rotation(position.angleTo(target));
+    tween.onUpdate(function(){
+      plane.position.x = position.x;
+      plane.position.y = position.y;
+  }
+  );
+  tween.start();
+  }
+
+  
   return (
     <div id="initial_container">
       <InputLabel id="lbl_Sw_Method" className={classes.label} >Switching Method</InputLabel>
-      <Select fullWidth labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange} margin="dense">
+      <Select fullWidth labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange} margin="dense" color='secondary'>
         <MenuItem value="Circuit">Circuit Switching</MenuItem>
         <MenuItem value="Packet">Packet Switching</MenuItem>
       </Select>
       <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
       <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal} />
       <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled/>
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

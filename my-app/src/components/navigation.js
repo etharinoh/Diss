@@ -4,7 +4,9 @@ import "./navigation.css";
 
 
 const Navigation = () => (
+  
     <div id="Nav">
+    <Button disabled ><b>Netwrk.JS</b></Button>
       <Button onClick={event => window.location.href="/Diss/#/"}>Home</Button>
       <Button onClick={event => window.location.href="/Diss/#/topologies"}>Topologies</Button>
       <Button onClick={event => window.location.href="/Diss/#/switching"}>Switching</Button>

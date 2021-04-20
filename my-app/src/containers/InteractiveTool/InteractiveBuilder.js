@@ -12,6 +12,7 @@ import SndRec from "./SenderReciever.js";
 import Message from "./Message.js";
 import Packet from "./Packet.js";
 import { TWEEN } from "three/examples/jsm/libs/tween.module.min";
+import { NormalAnimationBlendMode } from "three";
 
 let nodeMap = new Map();
 let connectionMap = new Map();
@@ -24,6 +25,8 @@ const button_options = {
   REMOVECONNECT: "removeConnection",
   SENDREC: "senderReciever",
   MOVENODE: "moveNode",
+  INSPECT: "inspectNode",
+  CLEAR: "clearAll",
   NONE: "none"
 }
 //Holds the enum value for which button is selected, used for onclick.
@@ -93,6 +96,11 @@ class Tool extends Component {
       case button_options.MOVENODE:
         moveNode(event);
         break;
+      case button_options.INSPECT:
+        inspectNode(event);
+        break;
+      case button_options.CLEAR:
+        clear();
       default:
         consoleAdd("No mode selected")
     }
@@ -149,11 +157,13 @@ var connectionCount = 0;
 function addConnection(event) {
   const MATERIAL = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
   var selectedNode = findNode(event);
+  
   if (selectedNode == 0) {
     consoleAdd("not a viable node selected")
   }
   else {
     if (nodes.length == 0) {
+      selectedNode.material.color.set(0xff0000);
       nodes.push(selectedNode);
       consoleAdd("Point added at: " + selectedNode.x + ", " + selectedNode.y);
     }
@@ -167,14 +177,15 @@ function addConnection(event) {
 
       const line = new THREE.Line(geometry, MATERIAL);
       line.name = connectionCount++;
-      var newConnect = new Connection(nodes[0], nodes[1], line);
+      var startObj = nodeMap.get(nodes[0].name);
+      var endObj = nodeMap.get(nodes[1].name);
+      var newConnect = new Connection(startObj, endObj, line); //create with node object
       scene.add(line);
       connectionMap.set(line.name, newConnect);
 
       nodes.forEach(element => {
         element.material.color.set(0xF2AFAF)
         var node = nodeMap.get(element.name);
-        node.addConnection(newConnect);
       });
       var animate = function () {
         requestAnimationFrame(animate);
@@ -182,7 +193,6 @@ function addConnection(event) {
       };
       animate();
       consoleAdd("Connection added");
-      sendMessage(newConnect);
       nodes = [];
     }
   }
@@ -198,7 +208,7 @@ function findNode(event) {
   if (intersects[0]) {
 
     if (intersects[0].object.type == "Mesh") {
-      intersects[0].object.material.color.set(0xff0000);
+      
       return intersects[0].object;
     }
     else {
@@ -251,11 +261,19 @@ function findConnection(event) {
     return 0;
   }
 }
-function removeSelected(selected) {
+function removeSelected(selected) { //TODO make sure everything is deleted
   connectionMap.delete(selected.name);
   scene.remove(selected);
 }
-
+function inspectNode(event) {
+  var chosen = findNode(event);
+  if (chosen == 0) {
+    consoleAdd("No node found here");
+  }
+  else {
+    consoleAdd("Node No: " + chosen.name + "at position: " + chosen.position.x + ", " + chosen.position.y);
+  }
+}
 function moveNode(event) {
   //find node
   //select where to move it to
@@ -278,7 +296,6 @@ function sendRevPair(event) {
 
       var sendRecPair = new SndRec(nodeMap.get(sender.name), nodeMap.get(reciever.name));
       SndRecArray.push(sendRecPair);
-      console.log(SndRecArray);
       sender = null;
       reciever = null;
     }
@@ -489,60 +506,138 @@ var PktRoutingDelay;
 //SenderReciver pairs
 var SndRecArray = [];
 
-  function startCircuitSw() {
-    //findbest route
-    SndRecArray.forEach(pair => findBestRoute(pair));
+function startCircuitSw() {
+  //findbest route
+  SndRecArray.forEach(pair => {
+    var chosenRoute = findBestRoute(pair); //output chosen route
+    consoleAdd("ChosenRoute: "+ chosenRoute)
+    console.log(chosenRoute); //TODO need to use the set of points to find their corresponding connections
+    //createMessage(pair, chosenRoute);
+  });
 
-    //Get all the connection objects and change their color to 
-  }
-  function findBestRoute(sendRecPair) {
-    var allRoutes = findRoutes(sendRecPair);
-    var shortestSteps = 0;
-    var bestRoute;
-    allRoutes.forEach(async function (route) {
-      if (route.length < shortestSteps) {
-        bestRoute = route;
-      }
-    })
-    return bestRoute;
-  }
-  function findRoutes(senderRecieverPair) {
-    var start = senderRecieverPair.sender;
-    var end = senderRecieverPair.reciever;
-    var allRoutes = [];
-    var currentRoute = [];
-    //from start node check all connections, if 
-    for (const connection in start.getConnectionArr()) { 
-      if(connection.fromNode == end){
+  //Get all the connection objects and change their color to 
+}
+function findBestRoute(sendRecPair) {
 
-      }
+  findRoutes(sendRecPair);
+  var shortestSteps = 0;
+  var bestRoute =[];
+  
+  allRoutes.forEach(function (route) {
+    if (bestRoute.length ==0){
+      bestRoute = route;
+      shortestSteps = route.length;
+    }
+    if (route.length < shortestSteps) {
+      bestRoute = route;
+      shortestSteps = route.size;
+      
+    }
+  })
+  return bestRoute;
+}
+function findRoutesAlt(sendRecPair){
+  /**
+   * 1. Add root node to the stack.
+    2. Loop on the stack as long as it's not empty.
+      1. Get the node at the top of the stack(current), mark it as visited, and remove it.
+      2. For every non-visited child of the current node, do the following:
+          1. Check if it's the goal node, If so, then return this child node.
+          2. Otherwise, push it to the stack.
+          3. If stack is empty, then goal node was not found!
+   * 
+   */
+          
+}
+function clone(A) {
+  return JSON.parse(JSON.stringify(A));
+}
+function findRoutes(sendRecPair) {
+  var start = sendRecPair.sender;
+  var end = sendRecPair.reciever;
+  var isVisited = new Map();
+  var pathList = [start.name];
+  var routes =[];
+  function findRoutesRec(currentNode, destinationNode, isVisited, local, myArray =[[]]) {
+  var otherNode;
+  var found;
+  //from start node check all connections, if 
+  if (currentNode == destinationNode) {
+    var currentRoute = clone(local); 
+    routes.push(currentRoute);
+    console.log(currentRoute);
+    allRoutes.push(currentRoute);
+    return routes;
+  }
+    isVisited.set(currentNode.name, true);
+  currentNode.getConnectionArr().forEach(connection => {
+    //finds out which node in the connection is the current node and saves the other
+    
+    if (connection.fromNode == currentNode) {
+      otherNode = connection.toNode;
+    }
+    else{
+      otherNode = connection.fromNode;
+    }
+
+    if (!isVisited.get(otherNode.name)) {
+      local.push(otherNode.name);
+      found =  findRoutesRec(otherNode, destinationNode, isVisited, local, myArray);
+      local.pop();
+      console.log("return1", found);
+      return found;
+      
+      
     }
   }
-
-  function sendMessage(connection) {
-    const geometry = new THREE.PlaneGeometry(.1, .015, 32); //MsgLength / 10000
-    const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
-    const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(connection.fromNode.position.x, connection.fromNode.position.y , 0.95);
-    
+  );
+  
+  
 
 
-    var position = { x: connection.fromNode.position.x, y: connection.fromNode.position.y };
-    var target = { x: connection.toNode.position.x, y: connection.toNode.position.y };
-    
-    var tween = new TWEEN.Tween(position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
-    console.log(plane);
-    plane.rotateZ(Math.atan2(target.y - position.y, target.x - position.x)); // Trigonometry 
-    scene.add(plane);//radians change to
-    tween.onUpdate(function () {
-      plane.position.x = position.x;
-      plane.position.y = position.y;
-    }
-    );
-    consoleAdd("sending message from node: "+connection.fromNode.name+" to "+ connection.toNode.name);
-    tween.start();
-    //use tween.delay(); for (packet routing delay)
+
+
+  isVisited.set(currentNode.name, false);
+}
+  return findRoutesRec(start, end, isVisited, pathList, []);
+}
+
+var allRoutes = [];
+var routesFound = 0;
+
+function createMessage(sndRec, route){
+  var startNode = sndRec.sender.circleObject;
+  const geometry = new THREE.PlaneGeometry(0.1, .015, 32); //MsgLength / 10000
+  const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
+  const plane = new THREE.Mesh(geometry, material);
+  plane.position.set(startNode.position.x, startNode.position.y, 0.95);
+  scene.add(plane);//radians change to
+  route.forEach(connection => {
+    sendMessage(plane, connection)
+  });
+}
+function sendMessage(message, connection) {
+  if((message.position.x == connection.fromNode.circleObject.position.x)&&(message.position.y == connection.fromNode.circleObject.position.y)){
+    var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var target = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
   }
+  else{
+    var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  }
+
+  var tween = new TWEEN.Tween(position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
+  message.rotateZ(Math.atan2(target.y - position.y, target.x - position.x)); // Trigonometry 
+  
+  tween.onUpdate( () => {
+    message.position.x = position.x;
+    message.position.y = position.y;
+  }
+  );
+  consoleAdd("sending message from node: " + connection.fromNode.name + " to " + connection.toNode.name);
+  tween.start();
+  //use tween.delay(); for (packet routing delay)
+}
 
 /**
  * This is the initial values inputs on the right hand side, used for controloling simulation

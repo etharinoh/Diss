@@ -5,6 +5,8 @@ export default class Connection{
             this.toNode = to;
             this.connectorObj = line;
             this.inUse = false;
+            from.addConnection(this);
+            to.addConnection(this);
     }
     use(){
         this.inUse = true;

@@ -13,6 +13,7 @@ import Message from "./Message.js";
 import Packet from "./Packet.js";
 import { TWEEN } from "three/examples/jsm/libs/tween.module.min";
 import { NormalAnimationBlendMode } from "three";
+import { grey } from "@material-ui/core/colors";
 
 let nodeMap = new Map();
 let connectionMap = new Map();
@@ -157,7 +158,7 @@ var connectionCount = 0;
 function addConnection(event) {
   const MATERIAL = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
   var selectedNode = findNode(event);
-  
+
   if (selectedNode == 0) {
     consoleAdd("not a viable node selected")
   }
@@ -208,7 +209,7 @@ function findNode(event) {
   if (intersects[0]) {
 
     if (intersects[0].object.type == "Mesh") {
-      
+
       return intersects[0].object;
     }
     else {
@@ -384,7 +385,7 @@ const useStyles = makeStyles((theme) => ({
     right: "",
   },
   initVal: {
-    color: 'white',
+    color: '#ffffff',
   },
 }));
 
@@ -503,16 +504,45 @@ var HeaderSize;
 var PktSize;
 var PktRoutingDelay;
 
+var totalMessageTime;
 //SenderReciver pairs
 var SndRecArray = [];
-
+var tweenArr = [];
+var chosenRoute = [];
 function startCircuitSw() {
   //findbest route
   SndRecArray.forEach(pair => {
-    var chosenRoute = findBestRoute(pair); //output chosen route
-    consoleAdd("ChosenRoute: "+ chosenRoute)
+    chosenRoute = findBestRoute(pair); //output chosen route
+    consoleAdd("ChosenRoute: " + chosenRoute)
     console.log(chosenRoute); //TODO need to use the set of points to find their corresponding connections
-    //createMessage(pair, chosenRoute);
+    var connArray = [];
+
+
+
+    for (let index = 0; index < chosenRoute.length - 1; index++) {
+      const element = chosenRoute[index];
+      var nodeObj = nodeMap.get(element);
+      var next = nodeMap.get(chosenRoute[index + 1]);
+      for (let value of connectionMap.values()) {
+        if ((nodeObj == value.fromNode) && (next == value.toNode)) {
+          connArray.push(value);
+          invConnMap.set(value, false);
+        } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
+          connArray.push(value);
+          invConnMap.set(value, true);
+        }
+      }
+
+    }
+    totalMessageTime = MsgLength / (TransRate * connArray.length);
+    console.log(totalMessageTime);
+    let setupPromise = new Promise((resolve, reject) => {
+      setupConnection(pair, connArray);
+      setTimeout(() => { createMessage(pair, connArray) }, CircSetupTime * 1000);
+      setTimeout(() => { breakdownConnection(pair, connArray) }, totalMessageTime)
+    });
+    //Reset eveything
+    allRoutes = [];
   });
 
   //Get all the connection objects and change their color to 
@@ -521,122 +551,286 @@ function findBestRoute(sendRecPair) {
 
   findRoutes(sendRecPair);
   var shortestSteps = 0;
-  var bestRoute =[];
-  
+  var bestRoute = [];
+
   allRoutes.forEach(function (route) {
-    if (bestRoute.length ==0){
+    if (bestRoute.length == 0) {
       bestRoute = route;
       shortestSteps = route.length;
     }
     if (route.length < shortestSteps) {
       bestRoute = route;
       shortestSteps = route.size;
-      
+
     }
   })
   return bestRoute;
 }
-function findRoutesAlt(sendRecPair){
-  /**
-   * 1. Add root node to the stack.
-    2. Loop on the stack as long as it's not empty.
-      1. Get the node at the top of the stack(current), mark it as visited, and remove it.
-      2. For every non-visited child of the current node, do the following:
-          1. Check if it's the goal node, If so, then return this child node.
-          2. Otherwise, push it to the stack.
-          3. If stack is empty, then goal node was not found!
-   * 
-   */
-          
-}
 function clone(A) {
   return JSON.parse(JSON.stringify(A));
 }
+var invConnMap = new Map;
 function findRoutes(sendRecPair) {
   var start = sendRecPair.sender;
   var end = sendRecPair.reciever;
   var isVisited = new Map();
   var pathList = [start.name];
-  var routes =[];
-  function findRoutesRec(currentNode, destinationNode, isVisited, local, myArray =[[]]) {
-  var otherNode;
-  var found;
-  //from start node check all connections, if 
-  if (currentNode == destinationNode) {
-    var currentRoute = clone(local); 
-    routes.push(currentRoute);
-    console.log(currentRoute);
-    allRoutes.push(currentRoute);
-    return routes;
-  }
+  var routes = [];
+  function findRoutesRec(currentNode, destinationNode, isVisited, local, myArray = [[]]) {
+    var otherNode;
+    var found;
+    //from start node check all connections, if 
+    if (currentNode == destinationNode) {
+      var currentRoute = clone(local);
+      routes.push(currentRoute);
+      console.log(currentRoute);
+      allRoutes.push(currentRoute);
+      return routes;
+    }
     isVisited.set(currentNode.name, true);
-  currentNode.getConnectionArr().forEach(connection => {
-    //finds out which node in the connection is the current node and saves the other
-    
-    if (connection.fromNode == currentNode) {
-      otherNode = connection.toNode;
-    }
-    else{
-      otherNode = connection.fromNode;
-    }
+    currentNode.getConnectionArr().forEach(connection => {
+      //finds out which node in the connection is the current node and saves the other
 
-    if (!isVisited.get(otherNode.name)) {
-      local.push(otherNode.name);
-      found =  findRoutesRec(otherNode, destinationNode, isVisited, local, myArray);
-      local.pop();
-      console.log("return1", found);
-      return found;
-      
-      
+      if (connection.fromNode == currentNode) {
+        otherNode = connection.toNode;
+      }
+      else {
+        otherNode = connection.fromNode;
+      }
+
+      if (!isVisited.get(otherNode.name)) {
+        local.push(otherNode.name);
+        found = findRoutesRec(otherNode, destinationNode, isVisited, local, myArray);
+        local.pop();
+        console.log("return1", found);
+        return found;
+
+
+      }
     }
+    );
+    isVisited.set(currentNode.name, false);
   }
-  );
-  
-  
-
-
-
-
-  isVisited.set(currentNode.name, false);
-}
   return findRoutesRec(start, end, isVisited, pathList, []);
 }
+function setupConnection(pair, route) { //circuit setuptime / Amount of stops in route
+  var timeForEach = (CircSetupTime / route.length) * 1000;
+  for (let index = 0; index < route.length; index++) {
+    setTimeout(() => {
+      const connection = route[index];
+      connection.connectorObj.material.color.set(0xF2E9AF);
+      var currentConObj = connectionMap.get(connection.connectorObj.name);
+      currentConObj.use();
+      if ((connection.fromNode != pair.sender) && (connection.fromNode != pair.reciever)) {
 
+        connection.fromNode.circleObject.material.color.set(0xF2E9AF);
+
+      }
+      if ((connection.toNode != pair.sender) && (connection.toNode != pair.reciever)) {
+        connection.toNode.circleObject.material.color.set(0xF2E9AF);
+      }
+    }, timeForEach);
+  }
+  consoleAdd("Route setup");
+  return;
+}
+async function breakdownConnection(pair, route) {
+  for (let index = 0; index < route.length; index++) {
+    const connection = route[index];
+    console.log(connection);
+    connection.connectorObj.material.color.set(0xFFFFFF);
+    var currentConObj = connectionMap.get(connection.connectorObj.name);
+    currentConObj.finished();
+    if ((connection.fromNode != pair.sender) && (connection.fromNode != pair.reciever)) {
+
+      connection.fromNode.circleObject.material.color.set(0xF2AFAF);
+
+    }
+    if ((connection.toNode != pair.sender) && (connection.toNode != pair.reciever)) {
+      connection.toNode.circleObject.material.color.set(0xF2AFAF);
+    }
+  }
+  consoleAdd("Connection broke down");
+  tweenArr = [];
+  return;
+}
 var allRoutes = [];
 var routesFound = 0;
+var complete = false;
 
-function createMessage(sndRec, route){
+async function createMessage(sndRec, route) {
+  complete = false;
   var startNode = sndRec.sender.circleObject;
-  const geometry = new THREE.PlaneGeometry(0.1, .015, 32); //MsgLength / 10000
+  const geometry = new THREE.PlaneGeometry(MsgLength / 1000, .015, 32); //MsgLength / 10000
   const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
   const plane = new THREE.Mesh(geometry, material);
+
   plane.position.set(startNode.position.x, startNode.position.y, 0.95);
+  console.log(plane.position);
   scene.add(plane);//radians change to
-  route.forEach(connection => {
-    sendMessage(plane, connection)
-  });
-}
-function sendMessage(message, connection) {
-  if((message.position.x == connection.fromNode.circleObject.position.x)&&(message.position.y == connection.fromNode.circleObject.position.y)){
-    var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
-    var target = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
-  }
-  else{
-    var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
-    var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  for (let i = 0; i < route.length; i++) {
+    var inverted = false;
+    const connection = route[i];
+    if (!invConnMap.get(connection)) {
+      var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+      var target = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+    }
+    else {
+      inverted = true;
+      var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+      var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+    }
+    sendMessage(plane, position, target, inverted);
+    console.log("finished");
+    consoleAdd("sending message from node: " + connection.fromNode.name + " to " + connection.toNode.name);
   }
 
+  complete = false;
+  tweenArr[0].start();
+  return;
+}
+function sendMessage(message, position, target, invert) {
+
+  console.log(position, target);
   var tween = new TWEEN.Tween(position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
-  message.rotateZ(Math.atan2(target.y - position.y, target.x - position.x)); // Trigonometry 
-  
-  tween.onUpdate( () => {
+
+
+
+  tween.onUpdate(() => {
     message.position.x = position.x;
     message.position.y = position.y;
+
   }
   );
-  consoleAdd("sending message from node: " + connection.fromNode.name + " to " + connection.toNode.name);
-  tween.start();
+  tween.onComplete(() => {
+    if (invert) {
+      message.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
+    }
+    else {
+      message.rotateZ(Math.atan2(target.y - position.y, target.x - position.x));
+    }
+  })
+  tween.onStart(() => {
+
+
+  })
+
+  if (tweenArr.length == 0) {
+    tweenArr.push(tween);
+  }
+  else {
+    tweenArr[tweenArr.length - 1].chain(tween);
+    tweenArr.push(tween);
+  }
+  console.log(tweenArr);
+  return;
   //use tween.delay(); for (packet routing delay)
+}
+function createPacketInfo(pair){
+  var fullPackets;
+  var remainingPacket;
+  var numberOfPackets=1;
+  var packets=[];
+  var dataSize = PktSize - HeaderSize
+  const geometry = new THREE.PlaneGeometry(5, .015, 32); //MsgLength / 10000
+  const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide , vertexColors: THREE.VertexColors});
+
+  fullPackets = Math.floor(MsgLength/(dataSize));
+  remainingPacket = MsgLength % (dataSize);
+  console.log(fullPackets, remainingPacket);
+
+  //creates the full packets
+  for (let index = 0; index < fullPackets; index++) {
+    var startNode = pair.sender.circleObject;
+    var destination = pair.reciever.circleObject;
+  
+    
+    
+    var cols = [{
+      stop: 0,
+      color: new THREE.Color(0xAFF2F0)
+    }, {
+      stop: (HeaderSize / PktSize),
+      color: new THREE.Color(0xDCAFF2)
+    }];
+    geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( cols, 2 ) );
+    const plane = new THREE.Mesh(geometry, material);
+    plane.position.set(0,0,0.95);
+    
+    scene.add(plane);
+    var newPkt = new Packet(numberOfPackets, PktSize,HeaderSize,dataSize,plane,startNode,destination);
+    packets.push(newPkt);
+    console.log(HeaderSize / PktSize, plane);
+  }}
+  /**
+   * This is a function for applyuing a colour gradient to a geomertry for threejs:
+   * Taken from: https://stackoverflow.com/questions/52614371/apply-color-gradient-to-material-on-mesh-three-js
+   * @param {*} geometry 
+   * @param {*} colors 
+   * @param {*} axis 
+   * @param {*} reverse 
+   */
+  function setGradient(geometry, colors, axis, reverse) {
+
+    geometry.computeBoundingBox();
+  
+    var bbox = geometry.boundingBox;
+    var size = new THREE.Vector3().subVectors(bbox.max, bbox.min);
+  
+    var vertexIndices = ['a', 'b', 'c'];
+    var face, vertex, normalized = new THREE.Vector3(),
+      normalizedAxis = 0;
+  
+    for (var c = 0; c < colors.length - 1; c++) {
+  
+      var colorDiff = colors[c + 1].stop - colors[c].stop;
+  
+      for (var i = 0; i < geometry.faces.length; i++) {
+        face = geometry.faces[i];
+        for (var v = 0; v < 3; v++) {
+          vertex = geometry.vertices[face[vertexIndices[v]]];
+          normalizedAxis = normalized.subVectors(vertex, bbox.min).divide(size)[axis];
+          if (reverse) {
+            normalizedAxis = 1 - normalizedAxis;
+          }
+          if (normalizedAxis >= colors[c].stop && normalizedAxis <= colors[c + 1].stop) {
+            var localNormalizedAxis = (normalizedAxis - colors[c].stop) / colorDiff;
+            face.vertexColors[v] = colors[c].color.clone().lerp(colors[c + 1].color, localNormalizedAxis);
+          }
+        }
+      }
+    }
+  }
+  
+  
+function startPktSwitchDG() {
+  createPacketInfo();
+}
+function startPktSwitchVC(){
+  //choses the best route using the same method as circuit switch
+  SndRecArray.forEach(pair => {
+    chosenRoute = findBestRoute(pair); //output chosen route
+    consoleAdd("ChosenRoute: " + chosenRoute)
+    var connArray = [];
+
+    //Takes the found best route, and finds the connections corresponding to them
+    for (let index = 0; index < chosenRoute.length - 1; index++) {
+      const element = chosenRoute[index];
+      var nodeObj = nodeMap.get(element);
+      var next = nodeMap.get(chosenRoute[index + 1]);
+      for (let value of connectionMap.values()) {
+        if ((nodeObj == value.fromNode) && (next == value.toNode)) {
+          connArray.push(value);
+          invConnMap.set(value, false);
+        } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
+          connArray.push(value);
+          invConnMap.set(value, true);
+        }
+      }
+
+    }
+  createPacketInfo(pair);
+});
 }
 
 /**
@@ -648,6 +842,7 @@ function sendMessage(message, connection) {
 function InitialValues() {
   const classes = useStyles();
   const [method, setMethod] = React.useState("");
+  const GRAY = "#757575"
 
   const handleChange = (event) => {
     setMethod(event.target.value);
@@ -656,68 +851,135 @@ function InitialValues() {
 
     //if circuit enable - circuit setup disable - header, packet, routing delay
     if (Switching_Method == "Circuit") {
-      CircSetupTime = document.getElementById("text_Circuit_Setup").disabled = false;
-      HeaderSize = document.getElementById("text_Header_Size").disabled = true;
-      PktSize = document.getElementById("text_Packet_Size").disabled = true;
-      PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = true;
+      document.getElementById("text_Circuit_Setup").disabled = false;
+      document.getElementById("text_Circuit_Setup").style.color = "#ffffff";
+
+
+      document.getElementById("text_Header_Size").disabled = true;
+      document.getElementById("text_Header_Size").style.color = GRAY;
+
+      document.getElementById("text_Packet_Size").disabled = true;
+      document.getElementById("text_Packet_Size").style.color = GRAY;
+
+      document.getElementById("text_Routing_Delay").disabled = true;
+      document.getElementById("text_Routing_Delay").style.color = GRAY;
     }
     else {    //if packet either  enable - header, packet, routing delay disable - circuit setup
-      CircSetupTime = document.getElementById("text_Circuit_Setup").disabled = true;
+      document.getElementById("text_Circuit_Setup").disabled = true;
+      document.getElementById("text_Circuit_Setup").style.color = GRAY;
 
-      HeaderSize = document.getElementById("text_Header_Size").disabled = false;
-      PktSize = document.getElementById("text_Packet_Size").disabled = false;
-      PktRoutingDelay = document.getElementById("text_Routing_Delay").disabled = false;
+
+      document.getElementById("text_Header_Size").disabled = false;
+      document.getElementById("text_Header_Size").style.color = "#ffffff";
+
+      document.getElementById("text_Packet_Size").disabled = false;
+      document.getElementById("text_Packet_Size").style.color = "#ffffff";
+
+      document.getElementById("text_Routing_Delay").disabled = false;
+      document.getElementById("text_Routing_Delay").style.color = "#ffffff";
     }
   }
+
   function validateInput() {
+    inputIssues = ""
+    var result = true;
     if (Switching_Method) {
+      //Inputs that are used for both
+      if ((isNaN(PropDelay))) {
+        result = false;
+        inputIssues += "Propagation Delay is Invalid, "
+      }
+      if ((isNaN(MsgLength))) {
+        result = false;
+        inputIssues += "Message Length is Invalid, "
+      }
+      if ((isNaN(TransRate))) {
+        result = false;
+        inputIssues += "Transmission Rate is Invalid, "
+      }
+
+      //Inputs for circuit switching
       if (Switching_Method == "Circuit") {
-        if ((!CircSetupTime) && (CircSetupTime.isNan())) {
-          document.getElementById("text_Circuit_Setup")()
+        if ((isNaN(CircSetupTime))) {
+          result = false;
+          inputIssues += "Circuit Setup Time is Invalid, "
         }
       }
+      //Inputs for packet switching
       else {
-        HeaderSize = document.getElementById("text_Header_Size").value;
-        PktSize = document.getElementById("text_Packet_Size").value;
-        PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+        
+        if ((isNaN(PktSize))) {
+          result = false;
+          inputIssues += "Packet Size is Invalid, "
+        }
+        if ((isNaN(HeaderSize))&&(HeaderSize < PktSize)) {
+          result = false;
+          inputIssues += "Header Size is Invalid, "
+        }
+        if ((isNaN(PktRoutingDelay))) {
+          result = false;
+          inputIssues += "Packet Routing Delay is Invalid, "
+        }
       }
+      return result;
     }
     else {
       return false;
     }
   }
+  var inputIssues;
   const animateSimulation = (event) => {
     //take all values from below and 
     PropDelay = document.getElementById("text_Prop_Delay").value;
     MsgLength = document.getElementById("text_Msg_Length").value;
     TransRate = document.getElementById("text_Transmission_Rate").value;
 
-    if (Switching_Method == "Circuit") {
-      CircSetupTime = document.getElementById("text_Circuit_Setup").value;
-      startCircuitSw();
+    if (validateInput) {
+      switch (Switching_Method) {
+        case "Circuit":
+          CircSetupTime = document.getElementById("text_Circuit_Setup").value;
+          startCircuitSw();
+          break;
+        case "Datagram":
+          HeaderSize = document.getElementById("text_Header_Size").value;
+          PktSize = document.getElementById("text_Packet_Size").value;
+          PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+          startPktSwitchDG();
+          break;
+        case "VirtualCircuit":
+          HeaderSize = document.getElementById("text_Header_Size").value;
+          PktSize = document.getElementById("text_Packet_Size").value;
+          PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+          startPktSwitchVC();
+          break;
+        default:
+          consoleAdd("Not a valid switching method")
+          break;
+
+      }
     }
     else {
-      HeaderSize = document.getElementById("text_Header_Size").value;
-      PktSize = document.getElementById("text_Packet_Size").value;
-      PktRoutingDelay = document.getElementById("text_Routing_Delay").value;
+      consoleAdd("Issues with the inputs: " + inputIssues)
     }
+
 
   }
 
   return (
     <div id="initial_container">
       <InputLabel id="lbl_Sw_Method" className={classes.label} >Switching Method</InputLabel>
-      <Select fullWidth labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange} margin="dense" color='secondary'>
+      <Select fullWidth labelId="lbl_Sw_Method" id="select_Sw_Method" value={method} onChange={handleChange} margin="dense" inputProps={{ className: classes.initVal }} >
         <MenuItem value="Circuit">Circuit Switching</MenuItem>
-        <MenuItem value="Packet">Packet Switching</MenuItem>
+        <MenuItem value="Datagram">Packet Switching - Datagram</MenuItem>
+        <MenuItem value="VirtualCircuit">Packet Switching - Virtual Circuit</MenuItem>
       </Select>
-      <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} />
-      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled />
-      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled />
-      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled />
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled />
+      <TextField fullWidth id="text_Prop_Delay" label="Propagation Delay (secs)" variant="outlined" margin="dense" color='#ffffff' className={classes.initVal} defaultValue="10" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Msg_Length" label="Message Length (bits)" variant="outlined" margin="dense" className={classes.initVal} defaultValue="100" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Transmission_Rate" label="Transmission Rate (bits/sec)" variant="outlined" margin="dense" className={classes.initVal} defaultValue="20" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="4" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="10" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="20" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="" inputProps={{ className: classes.initVal }} />
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

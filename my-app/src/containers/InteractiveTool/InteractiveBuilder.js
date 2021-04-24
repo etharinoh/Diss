@@ -509,6 +509,7 @@ var totalMessageTime;
 var SndRecArray = [];
 var tweenArr = [];
 var chosenRoute = [];
+var circMessageTimePerJump;
 function startCircuitSw() {
   //findbest route
   SndRecArray.forEach(pair => {
@@ -535,11 +536,13 @@ function startCircuitSw() {
 
     }
     totalMessageTime = MsgLength / (TransRate * connArray.length);
+    totalMessageTime = totalMessageTime * 1000;
+    circMessageTimePerJump = totalMessageTime / connArray.length;
     console.log(totalMessageTime);
     let setupPromise = new Promise((resolve, reject) => {
       setupConnection(pair, connArray);
       setTimeout(() => { createMessage(pair, connArray) }, CircSetupTime * 1000);
-      setTimeout(() => { breakdownConnection(pair, connArray) }, totalMessageTime)
+      setTimeout(() => { breakdownConnection(pair, connArray) }, totalMessageTime + (CircSetupTime * 1000));
     });
     //Reset eveything
     allRoutes = [];
@@ -692,7 +695,7 @@ async function createMessage(sndRec, route) {
 function sendMessage(message, position, target, invert) {
 
   console.log(position, target);
-  var tween = new TWEEN.Tween(position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
+  var tween = new TWEEN.Tween(position).to(target, circMessageTimePerJump); //2000 == 2s needs changing (propagation delay)
 
 
 
@@ -732,7 +735,7 @@ function createPacketInfo(pair){
   var numberOfPackets=1;
   var packets=[];
   var dataSize = PktSize - HeaderSize
-  const geometry = new THREE.PlaneGeometry(5, .015, 32); //MsgLength / 10000
+  const geometry = new THREE.PlaneGeometry(1, .015, 32); //MsgLength / 10000
   const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide , vertexColors: THREE.VertexColors});
 
   fullPackets = Math.floor(MsgLength/(dataSize));
@@ -753,6 +756,7 @@ function createPacketInfo(pair){
       stop: (HeaderSize / PktSize),
       color: new THREE.Color(0xDCAFF2)
     }];
+    var gradient = geometry.attributes.
     geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( cols, 2 ) );
     const plane = new THREE.Mesh(geometry, material);
     plane.position.set(0,0,0.95);

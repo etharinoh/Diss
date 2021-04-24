@@ -68,17 +68,19 @@ const Packet = (props) => (
 </p>
         <p><b>Teardown</b> - This is where the virtual connection will be removed</p>
         <h2>Advantages</h2>
-<ul>
-<li></li>
-<li></li>
-<li></li>
-</ul>
+        <ul>
+            <li>Packets can travel independently, reducing delay
+</li>
+            <li>Doesn't waste bandwidth as multiple transfers can use the same links</li>
+
+        </ul>
         <h2>Disadvantages</h2>
         <ul>
-<li></li>
-<li></li>
-<li></li>
-</ul>
+            <li>More complex protocols are required which can lead to errors in packets, thus delay in delivery
+</li>
+            <li>Unsuitable when information is needed in high quality or realtime
+</li>
+        </ul>
     </div>
 );
 

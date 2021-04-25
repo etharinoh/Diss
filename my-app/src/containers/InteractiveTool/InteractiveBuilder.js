@@ -12,7 +12,7 @@ import SndRec from "./SenderReciever.js";
 import Message from "./Message.js";
 import Packet from "./Packet.js";
 import { TWEEN } from "three/examples/jsm/libs/tween.module.min";
-import { NormalAnimationBlendMode } from "three";
+import { GeometryUtils, NormalAnimationBlendMode } from "three";
 import { grey } from "@material-ui/core/colors";
 
 let nodeMap = new Map();
@@ -683,7 +683,7 @@ async function createMessage(sndRec, route) {
       var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
       var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
     }
-    sendMessage(plane, position, target, inverted);
+    setupMessage(plane, position, target, inverted);
     console.log("finished");
     consoleAdd("sending message from node: " + connection.fromNode.name + " to " + connection.toNode.name);
   }
@@ -692,7 +692,7 @@ async function createMessage(sndRec, route) {
   tweenArr[0].start();
   return;
 }
-function sendMessage(message, position, target, invert) {
+function setupMessage(message, position, target, invert) {
 
   console.log(position, target);
   var tween = new TWEEN.Tween(position).to(target, circMessageTimePerJump); //2000 == 2s needs changing (propagation delay)
@@ -703,18 +703,17 @@ function sendMessage(message, position, target, invert) {
     message.position.x = position.x;
     message.position.y = position.y;
 
-  }
-  );
+  });
   tween.onComplete(() => {
-    if (invert) {
-      message.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
-    }
-    else {
-      message.rotateZ(Math.atan2(target.y - position.y, target.x - position.x));
-    }
+    
   })
   tween.onStart(() => {
-
+    if (invert) {
+          message.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
+        }
+        else {
+          message.rotateZ(Math.atan2(target.y - position.y, target.x - position.x));
+        }
 
   })
 
@@ -729,88 +728,70 @@ function sendMessage(message, position, target, invert) {
   return;
   //use tween.delay(); for (packet routing delay)
 }
-function createPacketInfo(pair){
+function createPacketInfo(pair) {
   var fullPackets;
   var remainingPacket;
-  var numberOfPackets=1;
-  var packets=[];
+  var numberOfPackets = 1;
+  var packets = [];
   var dataSize = PktSize - HeaderSize
-  const geometry = new THREE.PlaneGeometry(1, .015, 32); //MsgLength / 10000
-  const material = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide , vertexColors: THREE.VertexColors});
-
-  fullPackets = Math.floor(MsgLength/(dataSize));
+  const geometryP = new THREE.PlaneGeometry(PktSize / 1000, .015, 32, 32); //Packetsize / 10000
+  const geometryH = new THREE.PlaneGeometry(HeaderSize / 1000, .015, 32, 32);
+  fullPackets = Math.floor(MsgLength / (dataSize));
   remainingPacket = MsgLength % (dataSize);
   console.log(fullPackets, remainingPacket);
-
+  const materialP = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
+  const materialH = new THREE.MeshBasicMaterial({ color: 0xE7AFF2, side: THREE.DoubleSide });
   //creates the full packets
   for (let index = 0; index < fullPackets; index++) {
     var startNode = pair.sender.circleObject;
     var destination = pair.reciever.circleObject;
-  
-    
-    
-    var cols = [{
-      stop: 0,
-      color: new THREE.Color(0xAFF2F0)
-    }, {
-      stop: (HeaderSize / PktSize),
-      color: new THREE.Color(0xDCAFF2)
-    }];
-    var gradient = geometry.attributes.
-    geometry.setAttribute( 'color', new THREE.Float32BufferAttribute( cols, 2 ) );
-    const plane = new THREE.Mesh(geometry, material);
-    plane.position.set(0,0,0.95);
-    
-    scene.add(plane);
-    var newPkt = new Packet(numberOfPackets, PktSize,HeaderSize,dataSize,plane,startNode,destination);
-    packets.push(newPkt);
-    console.log(HeaderSize / PktSize, plane);
-  }}
-  /**
-   * This is a function for applyuing a colour gradient to a geomertry for threejs:
-   * Taken from: https://stackoverflow.com/questions/52614371/apply-color-gradient-to-material-on-mesh-three-js
-   * @param {*} geometry 
-   * @param {*} colors 
-   * @param {*} axis 
-   * @param {*} reverse 
-   */
-  function setGradient(geometry, colors, axis, reverse) {
 
-    geometry.computeBoundingBox();
   
-    var bbox = geometry.boundingBox;
-    var size = new THREE.Vector3().subVectors(bbox.max, bbox.min);
-  
-    var vertexIndices = ['a', 'b', 'c'];
-    var face, vertex, normalized = new THREE.Vector3(),
-      normalizedAxis = 0;
-  
-    for (var c = 0; c < colors.length - 1; c++) {
-  
-      var colorDiff = colors[c + 1].stop - colors[c].stop;
-  
-      for (var i = 0; i < geometry.faces.length; i++) {
-        face = geometry.faces[i];
-        for (var v = 0; v < 3; v++) {
-          vertex = geometry.vertices[face[vertexIndices[v]]];
-          normalizedAxis = normalized.subVectors(vertex, bbox.min).divide(size)[axis];
-          if (reverse) {
-            normalizedAxis = 1 - normalizedAxis;
-          }
-          if (normalizedAxis >= colors[c].stop && normalizedAxis <= colors[c + 1].stop) {
-            var localNormalizedAxis = (normalizedAxis - colors[c].stop) / colorDiff;
-            face.vertexColors[v] = colors[c].color.clone().lerp(colors[c + 1].color, localNormalizedAxis);
-          }
-        }
-      }
-    }
+    const packet = new THREE.Mesh(geometryP, materialP);
+    const header = new THREE.Mesh(geometryH, materialH)
+    header.scale.set(HeaderSize / PktSize, 1, 1);
+    const group = new THREE.Group();
+    group.add(packet)
+group.add(header)
+group.position.set(startNode.position.x, startNode.position.y, 0.95);
+scene.add(group);
+     //change to sender start
+    //sets t
+    
+    var position = { x: startNode.position.x, y: startNode.position.y };
+    var target = { x: destination.position.x, y: destination.position.y };
+  var tween = new TWEEN.Tween(position).to(target, 5000); //2000 == 2s needs changing (propagation delay)
+
+  //packet.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
+  //header.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
+
+//moves the header and packet together
+group.rotateZ(Math.atan2(position.y - target.y, position.x - target.x))
+  tween.onUpdate(() => {
+    group.position.x = position.x;
+    group.position.y = position.y;
+
+  });
+  tween.onStart(()=>{
+    header.position.x = packet.position.x - PktSize / 2000; //Positions the header at the end of the packet
   }
-  
-  
-function startPktSwitchDG() {
-  createPacketInfo();
+  );
+  setTimeout(tween.start(),1000);
+    // var newPkt = new Packet(numberOfPackets, PktSize, HeaderSize, dataSize, plane, startNode, destination);
+    // packets.push(newPkt);
+    // console.log(HeaderSize / PktSize, plane);
+  }
 }
-function startPktSwitchVC(){
+
+function startPktSwitchDG() {
+  SndRecArray.forEach(pair => {
+
+    findRoutes(pair); //If next conn is in use check if other routes, if not join q, if there is take it.
+    createPacketInfo(pair);
+  });
+
+}
+function startPktSwitchVC() {
   //choses the best route using the same method as circuit switch
   SndRecArray.forEach(pair => {
     chosenRoute = findBestRoute(pair); //output chosen route
@@ -833,8 +814,8 @@ function startPktSwitchVC(){
       }
 
     }
-  createPacketInfo(pair);
-});
+    createPacketInfo(pair);
+  });
 }
 
 /**
@@ -911,12 +892,12 @@ function InitialValues() {
       }
       //Inputs for packet switching
       else {
-        
+
         if ((isNaN(PktSize))) {
           result = false;
           inputIssues += "Packet Size is Invalid, "
         }
-        if ((isNaN(HeaderSize))&&(HeaderSize < PktSize)) {
+        if ((isNaN(HeaderSize)) && (HeaderSize < PktSize)) {
           result = false;
           inputIssues += "Header Size is Invalid, "
         }

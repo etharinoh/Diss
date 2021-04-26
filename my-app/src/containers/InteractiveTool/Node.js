@@ -4,11 +4,18 @@ export default class Node {
         this.circleObject = circle;
         this.connectionArr = [];
         this.packetQueue = [];
+        this.inUse =false;
     }
     addConnection(connection){
         this.connectionArr.push(connection);
     }
     
+    use(){
+        this.inUse = true;
+    }
+    finished(){
+        this.inUse = false;
+    }
     getConnectionArr(){
         return this.connectionArr;
     }

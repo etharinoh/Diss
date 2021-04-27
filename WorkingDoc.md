@@ -12,13 +12,10 @@
 * @TODO 
 
 - [ ] Maintennance
-    - [ ] Remove unneeded icons from manifest.json, keeping for reference
-    - [ ] Get onto github pages
+    - [x] Remove unneeded icons from manifest.json, keeping for reference
+    - [x] Get onto github pages
 
 - [ ] Interactive Tool
-  -   [ ] Resize the interactive tool screen (10% Selector Buttons, 70-75% Three.js Canvas, remaining 15-20%, inputs + Console)
-    - [ ] Change scene to react component look at medium article for this
-    - [ ] Maybe use raycaster to find where the mouse is looking on the scene, then use the mouse click to add a node at the point from raycaster?
 
 - [ ] Topologies
     - [x] Fill in content
@@ -33,11 +30,11 @@
         - [x] Fill in text
         - [x] Make diagrams
         - [ ] Fix diagram
-        - [ ] Advantages and Disadvantages
+        - [x] Advantages and Disadvantages
 
-- [ ] Routing
-    - [ ] Distance Vector
-    - [ ] Dijkstra's
+- [x] Routing
+    - [x] Distance Vector
+    - [x] Dijkstra's
 
 
-   change intersects so that it filters out any lines, chose closest x,y position
+ 

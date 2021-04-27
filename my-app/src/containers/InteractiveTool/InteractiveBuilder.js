@@ -510,7 +510,6 @@ var SndRecArray = [];
 
 
 var tweenArr = [];
-var chosenRoute = [];
 var circMessageTimePerJump;
 var totalSwitchTime;
 var messageMap = new Map;
@@ -526,7 +525,7 @@ function startCircuitSw() {
       startIndSw(pair);
     }
     else {
-      setTimeout(() => { startIndSw(pair) }, totalSwitchTime)
+      setTimeout(() => { startIndSw(pair) }, totalSwitchTime * index);
     }
 
   }
@@ -534,13 +533,12 @@ function startCircuitSw() {
   //Get all the connection objects and change their color to 
 }
 function clearGlobals() {
-  allRoutes = []
   tweenArr = [];
   invConnMap.clear();
 }
 function startIndSw(pair) {
   console.log("startAlg")
-  chosenRoute = findBestRoute(pair); //output chosen route
+  var chosenRoute = findBestRoute(pair); //output chosen route
   consoleAdd("ChosenRoute: " + chosenRoute)
   var connArray = [];
 
@@ -550,11 +548,11 @@ function startIndSw(pair) {
     var nodeObj = nodeMap.get(element);
     var next = nodeMap.get(chosenRoute[index + 1]);
     for (let value of connectionMap.values()) {
-      if ((nodeObj == value.fromNode) && (next == value.toNode)) {
+      if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
         connArray.push(value);
         invConnMap.set(value, false);
       } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
-        connArray.push(value);
+        connArray.push(value); //the conneciton is inverted
         invConnMap.set(value, true);
       }
     }
@@ -572,11 +570,11 @@ function startIndSw(pair) {
 }
 function findBestRoute(sendRecPair) {
 
-  findRoutes(sendRecPair);
+  var routes = findRoutes(sendRecPair);
   var shortestSteps = 0;
   var bestRoute = [];
 
-  allRoutes.forEach(function (route) {
+  routes.forEach(function (route) {
     if (bestRoute.length == 0) {
       bestRoute = route;
       shortestSteps = route.length;
@@ -606,7 +604,6 @@ function findRoutes(sendRecPair) {
     if (currentNode == destinationNode) {
       var currentRoute = clone(local);
       routes.push(currentRoute);
-      allRoutes.push(currentRoute);
       return routes;
     }
     isVisited.set(currentNode.name, true);
@@ -624,13 +621,14 @@ function findRoutes(sendRecPair) {
         local.push(otherNode.name);
         found = findRoutesRec(otherNode, destinationNode, isVisited, local, myArray);
         local.pop();
-        return found;
+        return routes;
       }
     }
     );
     isVisited.set(currentNode.name, false);
   }
-  return findRoutesRec(start, end, isVisited, pathList, []);
+  findRoutesRec(start, end, isVisited, pathList, []);
+  return routes;
 }
 function setupConnection(pair, route, setupTime) { //circuit setuptime / Amount of stops in route
   var timeForEach = (setupTime / route.length);
@@ -697,8 +695,6 @@ function breakEach(pair, connection) {
     connection.toNode.finished()
   }
 }
-var allRoutes = [];
-
 function createMessage(sndRec, route) {
   var startNode = sndRec.sender.circleObject;
   const geometry = new THREE.PlaneGeometry(MsgLength / 10000, .015, 32); //MsgLength / 10000
@@ -770,34 +766,34 @@ function createPacketInfo(pair, method) {
   var numberOfPackets = 1;
   var packets = [];
   var dataSize = PktSize - HeaderSize
-  
+
   fullPackets = Math.floor(MsgLength / (dataSize));
   remainingData = MsgLength % (dataSize);
 
   //creates the full packets
   for (let index = 0; index < fullPackets; index++) {
-    var created = createPacket(numberOfPackets,pair, dataSize);
+    var created = createPacket(numberOfPackets, pair, dataSize);
     numberOfPackets++
     packets.push(created)
   }
   //remaining packet
-  var remainingPkt = createPacket(packets.length+1, pair, remainingData)
+  var remainingPkt = createPacket(packets.length + 1, pair, remainingData)
   packets.push(remainingPkt);
 
   var totalTime;
   var noPackets = packets.length;
-  if(method=="VC"){
-    totalTime = CircSetupTime + ((MsgLength * noPackets) / TransRate) + TransDelay
+  if (method == "VC") {
+    totalTime = CircSetupTime + ((MsgLength + ( noPackets * HeaderSize) )/ TransRate) + TransDelay
   }
-  else{
-    totalTime = (noPackets * PktRoutingDelay) + ((MsgLength * noPackets) / TransRate) + TransDelay
+  else {
+    totalTime = (noPackets * PktRoutingDelay) + ((MsgLength + ( noPackets * HeaderSize) )/ TransRate) + TransDelay
   }
   //returns as an object with the packets array and the time calculation
-  return { p: packets, time:  totalTime * 1000};
+  return { p: packets, time: totalTime * 1000 };
 }
 function createPacket(packetNo, pair, dataSize) {
-  const geometryP = new THREE.PlaneGeometry(PktSize / 10000, .015, 32, 32); //Packetsize / 10000
-  const geometryH = new THREE.PlaneGeometry(HeaderSize / 10000, .015, 32, 32);
+  const geometryP = new THREE.PlaneGeometry(PktSize / 5000, .015, 32, 32); //Packetsize / 10000
+  const geometryH = new THREE.PlaneGeometry(HeaderSize / 5000, .015, 32, 32);
   const materialP = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
   const materialH = new THREE.MeshBasicMaterial({ color: 0xE7AFF2, side: THREE.DoubleSide });
   var startNode = pair.sender.circleObject;
@@ -815,7 +811,7 @@ function createPacket(packetNo, pair, dataSize) {
 
   return new Packet(packetNo, PktSize, HeaderSize, dataSize, packet, startNode, destination);
 }
-function sendPacket(packet, connection) {
+function sendPacketDG(packet, connection) {
   //consider inversion
   var position = { x: connection.fromNode.position.x, y: connection.fromNode.position.y };
   var target = { x: connection.toNode.position.x, y: connection.toNode.position.y };
@@ -831,7 +827,7 @@ function sendPacket(packet, connection) {
 
   });
   tween.onStart(() => {
-    packet.children[1].position.x = packet.children[0].position.x - PktSize / 20000; //Positions the header at the end of the packet
+    packet.children[1].position.x = packet.children[0].position.x - PktSize / 10000; //Positions the header at the end of the packet
   }
   );
   setTimeout(tween.start(), 1000); //Needs changing
@@ -847,8 +843,10 @@ function startPktSwitchDG() {
 }
 function startPktSwitchVC() {
   //choses the best route using the same method as circuit switch
-  SndRecArray.forEach(pair => {
-    chosenRoute = findBestRoute(pair); //output chosen route
+  for (let j = 0; j < SndRecArray.length; j++) {
+    (function(index){
+      const pair = SndRecArray[j];
+    var chosenRoute = findBestRoute(pair); //output chosen route
     consoleAdd("ChosenRoute: " + chosenRoute)
     var connArray = [];
 
@@ -858,33 +856,109 @@ function startPktSwitchVC() {
       var nodeObj = nodeMap.get(element);
       var next = nodeMap.get(chosenRoute[index + 1]);
       for (let value of connectionMap.values()) {
-        if ((nodeObj == value.fromNode) && (next == value.toNode)) {
+        if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
           connArray.push(value);
           invConnMap.set(value, false);
         } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
-          connArray.push(value);
+          connArray.push(value); //the conneciton is inverted
           invConnMap.set(value, true);
         }
       }
-
     }
     var packetsData = createPacketInfo(pair, "VC");
     console.log(packetsData);
     var packets = packetsData.p;
     var totalTime = packetsData.time;
 
-
-    setupConnection(pair, connArray, 0);
-    sendPacketsVC(pair, connArray, packets)
-    breakdownConnection(pair, connArray);
-  });
+    setupConnection(pair, connArray, CircSetupTime * 1000);
+    setTimeout(() => sendPacketsVC(pair, connArray, packetsData), CircSetupTime * 1000);
+    })(j)
+    
+  }
 }
-function sendPacketsVC(sndRec, route, packets) {
+/**
+ * 
+ * @param {*} sndRec 
+ * @param {*} route 
+ * @param {*} packets 
+ */
+function sendPacketsVC(sndRec, route, packetsData) {
+  var timeForEach = packetsData.time / route.length;
   //Go through each packet in the Q
-  for (let index = 0; index < packets.length; index++) {
-    const packetData = packets[index];
+  for (let index = 0; index < packetsData.p.length - 1; index++) {
+    (function (i) {
+      const packet = packetsData.p[index]
+      setTimeout(() => { createSendPacket(sndRec, route, packet, timeForEach, route, packetsData.p.length -1) }, (timeForEach * index));
+    })(index)
+
 
   }
+
+}
+function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets){
+  var connection = route[0];
+  var inverted;
+  
+  if (!invConnMap.get(connection)) {
+    inverted = false;
+    var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var target = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  }
+  else {
+    inverted = true;
+    var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  }
+  console.log(packet.packetNumber, target)
+  var tween = new TWEEN.Tween(packet.object.position).to(target, time); //2000 == 2s needs changing (propagation delay)
+  var tweenRot = new TWEEN.Tween(packet.object.rotation).to({ z: Math.atan2(position.y - target.y, position.x - target.x) }, 0);
+
+
+  tween.onComplete(() => {
+    //find what node we are at, 
+    var currentNode;
+
+    //join q setTimeout
+    if(route.length == 1){
+      console.log(packet)
+      consoleAdd("packet"+packet.packetNumber+"has reached the destination node")
+      if(packet.packetNumber == totalPackets){
+        consoleAdd("final packet recieved");
+        breakdownConnection(sndRec, wholeRoute)
+      }
+      scene.remove(packet.object);
+    }
+    else{
+      var newRoute = route.slice()
+      newRoute.shift()
+      if(newRoute.length != 0){
+        if(inverted){
+          currentNode = connection.fromNode
+        }
+        else{
+          currentNode = connection.toNode
+        }
+        currentNode.enqueue(packet);
+        createSendPacket(sndRec, newRoute, packet, time, wholeRoute, totalPackets)
+      }
+      
+    }
+  })
+  tween.onStart(() => {
+    var currentNode;
+    tweenRot.start();
+    packet.object.children[1].position.x = packet.object.children[0].position.x - PktSize / 10000;
+    //find what node we are at, dequeue
+    if(inverted){
+      currentNode = connection.fromNode
+    }
+    else{
+      currentNode = connection.toNode
+    }
+    currentNode.dequeue();
+
+  })
+  tween.start();
 }
 /**
  * This is the initial values inputs on the right hand side, used for controloling simulation
@@ -918,7 +992,7 @@ function InitialValues() {
       document.getElementById("text_Routing_Delay").disabled = true;
       document.getElementById("text_Routing_Delay").style.color = GRAY;
     }
-    else if (Switching_Method == "Datagram"){    //if packet either  enable - header, packet, routing delay disable - circuit setup
+    else if (Switching_Method == "Datagram") {    //if packet either  enable - header, packet, routing delay disable - circuit setup
       document.getElementById("text_Circuit_Setup").disabled = true;
       document.getElementById("text_Circuit_Setup").style.color = GRAY;
 
@@ -932,7 +1006,7 @@ function InitialValues() {
       document.getElementById("text_Routing_Delay").disabled = false;
       document.getElementById("text_Routing_Delay").style.color = WHITE;
     }
-    else{
+    else {
       document.getElementById("text_Circuit_Setup").disabled = false;
       document.getElementById("text_Circuit_Setup").style.color = WHITE;
 
@@ -946,51 +1020,62 @@ function InitialValues() {
       document.getElementById("text_Routing_Delay").style.color = GRAY;
     }
   }
-
+/**
+ * 
+ * @returns 
+ */
   function validateInput() {
     inputIssues = ""
     var result = true;
     if (Switching_Method) {
-      //Inputs that are used for both
-      if ((isNaN(TransDelay))) {
-        result = false;
-        inputIssues += "Transfer Delay is Invalid, "
-      }
-      if ((isNaN(MsgLength))) {
-        result = false;
-        inputIssues += "Message Length is Invalid, "
-      }
-      if ((isNaN(TransRate))) {
-        result = false;
-        inputIssues += "Transmission Rate is Invalid, "
-      }
+      if(SndRecArray.length != 0){
+          //Inputs that are used for both
+        if ((isNaN(TransDelay))) {
+          result = false;
+          inputIssues += inputIssues + "Transfer Delay is Invalid, "
+        }
+        if ((isNaN(MsgLength))) {
+          result = false;
+          inputIssues += "Message Length is Invalid, "
+        }
+        if ((isNaN(TransRate))) {
+          result = false;
+          inputIssues += "Transmission Rate is Invalid, "
+        }
 
-      //Inputs for circuit switching
-      if (Switching_Method == "Circuit") {
-        if ((isNaN(CircSetupTime))) {
-          result = false;
-          inputIssues += "Circuit Setup Time is Invalid, "
+        //Inputs for circuit switching
+        if (Switching_Method == "Circuit") {
+          if ((isNaN(CircSetupTime))) {
+            result = false;
+            inputIssues += "Circuit Setup Time is Invalid, "
+          }
         }
-      }
-      //Inputs for packet switching
-      else {
+        //Inputs for packet switching
+        else {
 
-        if ((isNaN(PktSize))) {
-          result = false;
-          inputIssues += "Packet Size is Invalid, "
+          if ((isNaN(PktSize))) {
+            result = false;
+            inputIssues += "Packet Size is Invalid, "
+          }
+          if ((isNaN(HeaderSize)) && (HeaderSize < PktSize)) {
+            result = false;
+            inputIssues += "Header Size is Invalid, "
+          }
+          if ((isNaN(PktRoutingDelay))) {
+            result = false;
+            inputIssues += "Packet Routing Delay is Invalid, "
+          }
         }
-        if ((isNaN(HeaderSize)) && (HeaderSize < PktSize)) {
-          result = false;
-          inputIssues += "Header Size is Invalid, "
-        }
-        if ((isNaN(PktRoutingDelay))) {
-          result = false;
-          inputIssues += "Packet Routing Delay is Invalid, "
-        }
+        return result;
       }
-      return result;
-    }
+      else{
+        inputIssues += "No sender reciver pairs found, "
+        return false;
+      }
+      }
+      
     else {
+      inputIssues += "No method chosen, "
       return false;
     }
   }
@@ -1000,8 +1085,12 @@ function InitialValues() {
     TransDelay = Number(document.getElementById("text_Trans_Delay").value);
     MsgLength = Number(document.getElementById("text_Msg_Length").value);
     TransRate = Number(document.getElementById("text_Transmission_Rate").value);
+    CircSetupTime = Number(document.getElementById("text_Circuit_Setup").value)
+    HeaderSize = Number(document.getElementById("text_Header_Size").value);
+    PktSize = Number(document.getElementById("text_Packet_Size").value);
+    PktRoutingDelay = Number(document.getElementById("text_Routing_Delay").value);
 
-    if (validateInput) {
+    if (validateInput()) {
       switch (Switching_Method) {
         case "Circuit":
           CircSetupTime = Number(document.getElementById("text_Circuit_Setup").value) * 1000;
@@ -1058,7 +1147,6 @@ function InitialValues() {
 /**
  * Console functions to add and clear to the console on the right hand side, providing updates to the user on internal functions
  * 
- * Unsure if needs moving / own file
  */
 function consoleClear() {
   //Get document text and clear

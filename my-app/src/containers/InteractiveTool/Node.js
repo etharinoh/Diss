@@ -21,10 +21,13 @@ export default class Node {
     }
 
     enqueue(toAdd){
+        console.log(toAdd, 'enqueue', this.packetQueue)
         this.packetQueue.push(toAdd);
     }
     dequeue(){
-        this.packetQueue.shift();
+        this.packetQueue.shift()
+        var removed = this.packetQueue.shift();
+        console.log(removed, 'dequeue')
     }
     isEmpty(){
         return this.packetQueue.length == 0;

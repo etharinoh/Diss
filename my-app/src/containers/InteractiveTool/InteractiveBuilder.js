@@ -3,7 +3,7 @@ import Navigation from "../../components/navigation";
 import * as THREE from "three";
 import { Component } from "react";
 import React from 'react';
-import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup, Grid } from "@material-ui/core"
+import { TextField, Button, InputLabel, Select, MenuItem, makeStyles, withTheme, ButtonGroup, Grid, BottomNavigation } from "@material-ui/core"
 import "./Interactive.css"
 
 import Connection from "./Connection.js";
@@ -735,9 +735,6 @@ function setupMessage(message, position, target, invert) {
     message.position.y = position.y;
 
   });
-  tween.onComplete(() => {
-
-  })
   tween.onStart(() => {
     if (invert) {
       message.rotateZ(Math.atan2(position.y - target.y, position.x - target.x));
@@ -783,10 +780,10 @@ function createPacketInfo(pair, method) {
   var totalTime;
   var noPackets = packets.length;
   if (method == "VC") {
-    totalTime = CircSetupTime + ((MsgLength + ( noPackets * HeaderSize) )/ TransRate) + TransDelay
+    totalTime = CircSetupTime + ((MsgLength + (noPackets * HeaderSize)) / TransRate) + TransDelay
   }
   else {
-    totalTime = (noPackets * PktRoutingDelay) + ((MsgLength + ( noPackets * HeaderSize) )/ TransRate) + TransDelay
+    totalTime = (noPackets * PktRoutingDelay) + ((MsgLength + (noPackets * HeaderSize)) / TransRate) + TransDelay
   }
   //returns as an object with the packets array and the time calculation
   return { p: packets, time: totalTime * 1000 };
@@ -811,69 +808,169 @@ function createPacket(packetNo, pair, dataSize) {
 
   return new Packet(packetNo, PktSize, HeaderSize, dataSize, packet, startNode, destination);
 }
-function sendPacketDG(packet, connection) {
+function sendPacketDG(packet, connection, inv, totalPackets) {
   //consider inversion
-  var position = { x: connection.fromNode.position.x, y: connection.fromNode.position.y };
-  var target = { x: connection.toNode.position.x, y: connection.toNode.position.y };
-  var tween = new TWEEN.Tween(position).to(target, 5000); //2000 == 2s needs changing (propagation delay)
+  if (!inv) {
+    var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var target = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  }
+  else {
+    var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
+    var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
+  }
+  var tween = new TWEEN.Tween(packet.object.position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
+  var tweenRot = new TWEEN.Tween(packet.object.rotation).to({ z: Math.atan2(position.y - target.y, position.x - target.x) }, 0);
 
 
-  console.log(packet)
   //moves the header and packet together
-  packet.rotateZ(Math.atan2(position.y - target.y, position.x - target.x))
-  tween.onUpdate(() => {
-    packet.position.x = position.x;
-    packet.position.y = position.y;
+  tween.onComplete(() => {
+    var currentNode;
+    if (inv) {
+      currentNode = connection.fromNode
+    }
+    else {
+      currentNode = connection.toNode
+    }
 
-  });
+    var found = bestConn(currentNode);
+
+    if (found.c) {
+      connection.finished();
+      currentNode.enqueue(currentNode);
+      setTimeout(() => sendPacketDG(packet, found.c.conn, found.i, totalPackets), PktRoutingDelay * 1000);
+    }
+    else {
+      console.log(packet)
+      consoleAdd("packet " + packet.packetNumber + " has reached the destination node")
+      if (packet.packetNumber == totalPackets) {
+        consoleAdd("final packet recieved");
+      }
+      scene.remove(packet.object);
+
+    }
+
+
+  })
   tween.onStart(() => {
-    packet.children[1].position.x = packet.children[0].position.x - PktSize / 10000; //Positions the header at the end of the packet
+    var currentNode;
+    tweenRot.start();
+    packet.object.children[1].position.x = packet.object.children[0].position.x - PktSize / 10000; //Positions the header at the end of the packet
+    if (inv) {
+      currentNode = connection.fromNode
+    }
+    else {
+      currentNode = connection.toNode
+    }
+    connection.use();
+    currentNode.dequeue();
   }
   );
-  setTimeout(tween.start(), 1000); //Needs changing
+  setTimeout(() => { tween.start() }, PktRoutingDelay * 1000); //Needs changing
 }
 
 function startPktSwitchDG() {
   SndRecArray.forEach(pair => {
 
-    findRoutes(pair); //If next conn is in use check if other routes, if not join q, if there is take it.
-    createPacketInfo(pair);
-  });
+    var routes = findRoutes(pair);
+    routes.sort(function (a, b) {
+      return a.length - b.length;
+    })
+    var destination = pair.reciever.name;
+    for (let index = 0; index < routes.length; index++) { //each route from sender to reciver
+      const eachRoute = routes[index];
+      for (let i = 0; i < eachRoute.length; i++) { //each node in that route
 
+        var node = eachRoute[i]
+        var steps = eachRoute.length - i - 1;
+        var nodeObj = nodeMap.get(node);
+        var next = nodeMap.get(eachRoute[i + 1]);
+        console.log(index)
+        for (let value of nodeObj.getConnectionArr()) { //Each connection from that node
+          if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
+            nodeObj.addRouteToTable(destination, steps, value, false)
+          } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
+            nodeObj.addRouteToTable(destination, steps, value, true)
+          }
+        }
+      }
+    }
+    for (let value of nodeMap.values()) {
+      console.log(value.name, value.allRoutes())
+    }
+    var packetInfo = createPacketInfo(pair, "DG");
+    var totalTime = packetInfo.time
+    var packets = packetInfo.p
+    for (let index = 0; index < packets.length; index++) {
+      (function (i){
+        const packet = packets[index];
+      var found = bestConn(pair.sender)
+
+      setTimeout(() => {
+        sendPacketDG(packet, found.c.conn, found.i, packets.p - 1)
+      }, PktRoutingDelay * 1000 * index)
+      })(index)
+      
+
+
+    }
+  });
+}
+function bestConn(node) {
+  var chosen;
+  var shortestJump;
+  var queue = false;
+  for (let index = 0; index < node.allRoutes().length; index++) {
+    const choice = node.allRoutes()[index];
+    if (index == 0) {
+      shortestJump = choice.steps;
+      chosen = choice;
+    }
+    else if (shortestJump == choice.steps) {
+      if (!choice.conn.inUse) {
+        chosen = choice;
+      }
+    }
+    else {
+      chosen = node.allRoutes()[index];
+      queue = true;
+    }
+
+  }
+  return { c: chosen, q: queue };
 }
 function startPktSwitchVC() {
   //choses the best route using the same method as circuit switch
   for (let j = 0; j < SndRecArray.length; j++) {
-    (function(index){
+    (function (index) {
       const pair = SndRecArray[j];
-    var chosenRoute = findBestRoute(pair); //output chosen route
-    consoleAdd("ChosenRoute: " + chosenRoute)
-    var connArray = [];
+      var chosenRoute = findBestRoute(pair); //output chosen route
+      consoleAdd("ChosenRoute: " + chosenRoute)
+      var connArray = [];
 
-    //Takes the found best route, and finds the connections corresponding to them
-    for (let index = 0; index < chosenRoute.length - 1; index++) {
-      const element = chosenRoute[index];
-      var nodeObj = nodeMap.get(element);
-      var next = nodeMap.get(chosenRoute[index + 1]);
-      for (let value of connectionMap.values()) {
-        if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
-          connArray.push(value);
-          invConnMap.set(value, false);
-        } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
-          connArray.push(value); //the conneciton is inverted
-          invConnMap.set(value, true);
+      //Takes the found best route, and finds the connections corresponding to them
+      for (let index = 0; index < chosenRoute.length - 1; index++) {
+        const element = chosenRoute[index];
+        var nodeObj = nodeMap.get(element);
+        var next = nodeMap.get(chosenRoute[index + 1]);
+        for (let value of connectionMap.values()) {
+          if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
+            connArray.push(value);
+            invConnMap.set(value, false);
+          } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
+            connArray.push(value); //the conneciton is inverted
+            invConnMap.set(value, true);
+          }
         }
       }
-    }
-    var packetsData = createPacketInfo(pair, "VC");
-    console.log(packetsData);
-    var packets = packetsData.p;
-    var totalTime = packetsData.time;
+      var packetsData = createPacketInfo(pair, "VC");
+      console.log(packetsData);
+      var packets = packetsData.p;
+      var totalTime = packetsData.time;
 
-    setupConnection(pair, connArray, CircSetupTime * 1000);
-    setTimeout(() => sendPacketsVC(pair, connArray, packetsData), CircSetupTime * 1000);
+      setupConnection(pair, connArray, CircSetupTime * 1000);
+      setTimeout(() => sendPacketsVC(pair, connArray, packetsData), CircSetupTime * 1000);
     })(j)
-    
+
   }
 }
 /**
@@ -888,17 +985,17 @@ function sendPacketsVC(sndRec, route, packetsData) {
   for (let index = 0; index < packetsData.p.length - 1; index++) {
     (function (i) {
       const packet = packetsData.p[index]
-      setTimeout(() => { createSendPacket(sndRec, route, packet, timeForEach, route, packetsData.p.length -1) }, (timeForEach * index));
+      setTimeout(() => { createSendPacket(sndRec, route, packet, timeForEach, route, packetsData.p.length - 1) }, (timeForEach * index));
     })(index)
 
 
   }
 
 }
-function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets){
+function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets) {
   var connection = route[0];
   var inverted;
-  
+
   if (!invConnMap.get(connection)) {
     inverted = false;
     var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
@@ -909,7 +1006,7 @@ function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets)
     var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
     var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
   }
-  console.log(packet.packetNumber, target)
+
   var tween = new TWEEN.Tween(packet.object.position).to(target, time); //2000 == 2s needs changing (propagation delay)
   var tweenRot = new TWEEN.Tween(packet.object.rotation).to({ z: Math.atan2(position.y - target.y, position.x - target.x) }, 0);
 
@@ -919,29 +1016,29 @@ function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets)
     var currentNode;
 
     //join q setTimeout
-    if(route.length == 1){
+    if (route.length == 1) {
       console.log(packet)
-      consoleAdd("packet"+packet.packetNumber+"has reached the destination node")
-      if(packet.packetNumber == totalPackets){
+      consoleAdd("packet " + packet.packetNumber + " has reached the destination node")
+      if (packet.packetNumber == totalPackets) {
         consoleAdd("final packet recieved");
         breakdownConnection(sndRec, wholeRoute)
       }
       scene.remove(packet.object);
     }
-    else{
+    else {
       var newRoute = route.slice()
       newRoute.shift()
-      if(newRoute.length != 0){
-        if(inverted){
+      if (newRoute.length != 0) {
+        if (inverted) {
           currentNode = connection.fromNode
         }
-        else{
+        else {
           currentNode = connection.toNode
         }
         currentNode.enqueue(packet);
         createSendPacket(sndRec, newRoute, packet, time, wholeRoute, totalPackets)
       }
-      
+
     }
   })
   tween.onStart(() => {
@@ -949,10 +1046,10 @@ function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets)
     tweenRot.start();
     packet.object.children[1].position.x = packet.object.children[0].position.x - PktSize / 10000;
     //find what node we are at, dequeue
-    if(inverted){
+    if (inverted) {
       currentNode = connection.fromNode
     }
-    else{
+    else {
       currentNode = connection.toNode
     }
     currentNode.dequeue();
@@ -1020,16 +1117,16 @@ function InitialValues() {
       document.getElementById("text_Routing_Delay").style.color = GRAY;
     }
   }
-/**
- * 
- * @returns 
- */
+  /**
+   * 
+   * @returns 
+   */
   function validateInput() {
     inputIssues = ""
     var result = true;
     if (Switching_Method) {
-      if(SndRecArray.length != 0){
-          //Inputs that are used for both
+      if (SndRecArray.length != 0) {
+        //Inputs that are used for both
         if ((isNaN(TransDelay))) {
           result = false;
           inputIssues += inputIssues + "Transfer Delay is Invalid, "
@@ -1068,12 +1165,12 @@ function InitialValues() {
         }
         return result;
       }
-      else{
+      else {
         inputIssues += "No sender reciver pairs found, "
         return false;
       }
-      }
-      
+    }
+
     else {
       inputIssues += "No method chosen, "
       return false;

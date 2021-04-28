@@ -24,13 +24,10 @@ export default class Node {
     }
 
     enqueue(toAdd) {
-        console.log(toAdd, 'enqueue', this.packetQueue)
         this.packetQueue.push(toAdd);
     }
     dequeue() {
         this.packetQueue.shift()
-        var removed = this.packetQueue.shift();
-        console.log(removed, 'dequeue')
     }
     isEmpty() {
         return this.packetQueue.length == 0;
@@ -38,7 +35,7 @@ export default class Node {
     addRouteToTable(destination, steps, nextConn, inv) {
         var newObj = { dest: destination, step: steps, conn: nextConn, invert: inv }
             this.rTable.push(newObj);
-
+        this.rTable.sort((a,b)=>a.step - b.step)
 
 
         

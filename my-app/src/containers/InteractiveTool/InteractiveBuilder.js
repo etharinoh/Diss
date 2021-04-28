@@ -537,7 +537,6 @@ function clearGlobals() {
   invConnMap.clear();
 }
 function startIndSw(pair) {
-  console.log("startAlg")
   var chosenRoute = findBestRoute(pair); //output chosen route
   consoleAdd("ChosenRoute: " + chosenRoute)
   var connArray = [];
@@ -561,7 +560,6 @@ function startIndSw(pair) {
 
   circMessageTimePerJump = totalMessageTime / connArray.length;
 
-  console.log(totalSwitchTime);
   setupConnection(pair, connArray, CircSetupTime);
   setTimeout(() => { createMessage(pair, connArray) }, CircSetupTime);
   setTimeout(() => { breakdownConnection(pair, connArray) }, totalSwitchTime);
@@ -702,7 +700,6 @@ function createMessage(sndRec, route) {
   const plane = new THREE.Mesh(geometry, material);
 
   plane.position.set(startNode.position.x, startNode.position.y, 0.95);
-  console.log(plane.position);
   scene.add(plane);//radians change to
   for (let i = 0; i < route.length; i++) {
     var inverted = false;
@@ -725,7 +722,7 @@ function createMessage(sndRec, route) {
 }
 function setupMessage(message, position, target, invert) {
 
-  console.log(position, target);
+
   var tween = new TWEEN.Tween(position).to(target, circMessageTimePerJump); //2000 == 2s needs changing (propagation delay)
   var tweenRot = new TWEEN.Tween(message.rotation).to({ z: Math.atan2(position.y - target.y, position.x - target.x) }, 0);
 
@@ -753,7 +750,6 @@ function setupMessage(message, position, target, invert) {
     tweenArr[tweenArr.length - 1].chain(tween, tweenRot);
     tweenArr.push(tween);
   }
-  console.log(tweenArr);
   return;
   //use tween.delay(); for (packet routing delay)
 }
@@ -766,29 +762,31 @@ function createPacketInfo(pair, method) {
 
   fullPackets = Math.floor(MsgLength / (dataSize));
   remainingData = MsgLength % (dataSize);
-
+  var totalPackets = fullPackets+1
   //creates the full packets
   for (let index = 0; index < fullPackets; index++) {
-    var created = createPacket(numberOfPackets, pair, dataSize);
+    var created = createPacket(numberOfPackets, pair, dataSize, totalPackets);
     numberOfPackets++
     packets.push(created)
   }
   //remaining packet
-  var remainingPkt = createPacket(packets.length + 1, pair, remainingData)
+  var remainingPkt = createPacket(totalPackets, pair, remainingData, totalPackets)
   packets.push(remainingPkt);
 
   var totalTime;
   var noPackets = packets.length;
+  var timeForEach;
   if (method == "VC") {
     totalTime = CircSetupTime + ((MsgLength + (noPackets * HeaderSize)) / TransRate) + TransDelay
   }
   else {
     totalTime = (noPackets * PktRoutingDelay) + ((MsgLength + (noPackets * HeaderSize)) / TransRate) + TransDelay
+    timeForEach = PktRoutingDelay + ((MsgLength + (noPackets * HeaderSize)) / TransRate)
   }
   //returns as an object with the packets array and the time calculation
-  return { p: packets, time: totalTime * 1000 };
+  return { p: packets, time: totalTime * 1000, timeE: timeForEach * 1000 };
 }
-function createPacket(packetNo, pair, dataSize) {
+function createPacket(packetNo, pair, dataSize, totalNo) {
   const geometryP = new THREE.PlaneGeometry(PktSize / 5000, .015, 32, 32); //Packetsize / 10000
   const geometryH = new THREE.PlaneGeometry(HeaderSize / 5000, .015, 32, 32);
   const materialP = new THREE.MeshBasicMaterial({ color: 0xAFF2F0, side: THREE.DoubleSide });
@@ -806,9 +804,11 @@ function createPacket(packetNo, pair, dataSize) {
   scene.add(packet);
 
 
-  return new Packet(packetNo, PktSize, HeaderSize, dataSize, packet, startNode, destination);
+  return new Packet(packetNo, PktSize, HeaderSize, dataSize, packet, startNode, pair.reciever, totalNo);
 }
+var packetRecieved = new Map
 function sendPacketDG(packet, connection, inv, totalPackets) {
+  console.log(inv, connection)
   //consider inversion
   if (!inv) {
     var position = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
@@ -818,34 +818,37 @@ function sendPacketDG(packet, connection, inv, totalPackets) {
     var target = { x: connection.fromNode.circleObject.position.x, y: connection.fromNode.circleObject.position.y };
     var position = { x: connection.toNode.circleObject.position.x, y: connection.toNode.circleObject.position.y };
   }
-  var tween = new TWEEN.Tween(packet.object.position).to(target, 2000); //2000 == 2s needs changing (propagation delay)
+  var tween = new TWEEN.Tween(packet.object.position).to(target, PktSize/TransRate * 1000); //2000 == 2s needs changing (propagation delay)
   var tweenRot = new TWEEN.Tween(packet.object.rotation).to({ z: Math.atan2(position.y - target.y, position.x - target.x) }, 0);
 
 
   //moves the header and packet together
   tween.onComplete(() => {
-    var currentNode;
+    var currentNode, originalNode;
     if (inv) {
       currentNode = connection.fromNode
+      originalNode = connection.toNode
+
     }
     else {
       currentNode = connection.toNode
+      originalNode = connection.fromNode
     }
-
+    originalNode.dequeue();
+    connection.finished();
     var found = bestConn(currentNode);
+    if (typeof found !== 'undefined') {
 
-    if (found.c) {
-      connection.finished();
-      currentNode.enqueue(currentNode);
-      setTimeout(() => sendPacketDG(packet, found.c.conn, found.i, totalPackets), PktRoutingDelay * 1000);
+
+      setTimeout(()=>sendPacketDG(packet, found.conn, found.invert, totalPackets),PktRoutingDelay *1000);
     }
-    else {
-      console.log(packet)
+    else if (currentNode == packet.destinationNode) {
       consoleAdd("packet " + packet.packetNumber + " has reached the destination node")
+      packetRecieved.get()
       if (packet.packetNumber == totalPackets) {
         consoleAdd("final packet recieved");
       }
-      scene.remove(packet.object);
+      scene.remove(packet.object)
 
     }
 
@@ -862,81 +865,78 @@ function sendPacketDG(packet, connection, inv, totalPackets) {
       currentNode = connection.toNode
     }
     connection.use();
-    currentNode.dequeue();
+    currentNode.enqueue(currentNode);
   }
   );
-  setTimeout(() => { tween.start() }, PktRoutingDelay * 1000); //Needs changing
+  tween.start();
 }
-
 function startPktSwitchDG() {
-  SndRecArray.forEach(pair => {
+  for (let i = 0; i < SndRecArray.length; i++) {
+    (function (j) {
+      const pair = SndRecArray[i];
+      var routes = findRoutes(pair);
+      routes.sort(function (a, b) {
+        return a.length - b.length;
+      })
+      var destination = pair.reciever.name;
+      for (let index = 0; index < routes.length; index++) { //each route from sender to reciver
+        const eachRoute = routes[index];
+        for (let i = 0; i < eachRoute.length; i++) { //each node in that route
 
-    var routes = findRoutes(pair);
-    routes.sort(function (a, b) {
-      return a.length - b.length;
-    })
-    var destination = pair.reciever.name;
-    for (let index = 0; index < routes.length; index++) { //each route from sender to reciver
-      const eachRoute = routes[index];
-      for (let i = 0; i < eachRoute.length; i++) { //each node in that route
-
-        var node = eachRoute[i]
-        var steps = eachRoute.length - i - 1;
-        var nodeObj = nodeMap.get(node);
-        var next = nodeMap.get(eachRoute[i + 1]);
-        console.log(index)
-        for (let value of nodeObj.getConnectionArr()) { //Each connection from that node
-          if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
-            nodeObj.addRouteToTable(destination, steps, value, false)
-          } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
-            nodeObj.addRouteToTable(destination, steps, value, true)
+          var node = eachRoute[i]
+          var steps = eachRoute.length - i - 1;
+          var nodeObj = nodeMap.get(node);
+          var next = nodeMap.get(eachRoute[i + 1]);
+          for (let value of nodeObj.getConnectionArr()) { //Each connection from that node
+            if ((nodeObj == value.fromNode) && (next == value.toNode)) { //the connection is not inverted
+              nodeObj.addRouteToTable(destination, steps, value, false)
+            } else if ((nodeObj == value.toNode) && (next == value.fromNode)) {
+              nodeObj.addRouteToTable(destination, steps, value, true)
+            }
           }
         }
       }
-    }
-    for (let value of nodeMap.values()) {
-      console.log(value.name, value.allRoutes())
-    }
-    var packetInfo = createPacketInfo(pair, "DG");
-    var totalTime = packetInfo.time
-    var packets = packetInfo.p
-    for (let index = 0; index < packets.length; index++) {
-      (function (i){
-        const packet = packets[index];
-      var found = bestConn(pair.sender)
-
-      setTimeout(() => {
-        sendPacketDG(packet, found.c.conn, found.i, packets.p - 1)
-      }, PktRoutingDelay * 1000 * index)
-      })(index)
-      
+      for (let value of nodeMap.values()) {
+        console.log(value.name, value.allRoutes())
+      }
+      var packetInfo = createPacketInfo(pair, "DG");
+      var totalTime = packetInfo.time
+      var packets = packetInfo.p
+      for (let index = 0; index < packets.length; index++) {
+        (function (i) {
+          const packet = packets[index];
 
 
-    }
-  });
+          setTimeout(() => {
+            var found = bestConn(pair.sender)
+            if (typeof found !== 'undefined') {
+              consoleAdd("sending packet " + packet.packetNumber)
+              sendPacketDG(packet, found.conn, found.invert, packets.p - 1)
+            }
+          }, (PktRoutingDelay * 1000 * index) + TransDelay * 1000)
+        })(index)
+
+
+      }
+
+
+    })(i)
+  }
 }
 function bestConn(node) {
   var chosen;
   var shortestJump;
   var queue = false;
+  var lowestJumps = 0;
   for (let index = 0; index < node.allRoutes().length; index++) {
     const choice = node.allRoutes()[index];
-    if (index == 0) {
-      shortestJump = choice.steps;
-      chosen = choice;
-    }
-    else if (shortestJump == choice.steps) {
-      if (!choice.conn.inUse) {
-        chosen = choice;
-      }
-    }
-    else {
-      chosen = node.allRoutes()[index];
-      queue = true;
+    if (!choice.conn.inUse) {
+      return choice
     }
 
   }
-  return { c: chosen, q: queue };
+  return node.allRoutes()[0];
+
 }
 function startPktSwitchVC() {
   //choses the best route using the same method as circuit switch
@@ -963,7 +963,6 @@ function startPktSwitchVC() {
         }
       }
       var packetsData = createPacketInfo(pair, "VC");
-      console.log(packetsData);
       var packets = packetsData.p;
       var totalTime = packetsData.time;
 
@@ -1017,7 +1016,6 @@ function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets)
 
     //join q setTimeout
     if (route.length == 1) {
-      console.log(packet)
       consoleAdd("packet " + packet.packetNumber + " has reached the destination node")
       if (packet.packetNumber == totalPackets) {
         consoleAdd("final packet recieved");
@@ -1232,7 +1230,7 @@ function InitialValues() {
       <TextField fullWidth id="text_Circuit_Setup" label="Circuit Setup Time (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="4" inputProps={{ className: classes.initVal }} />
       <TextField fullWidth id="text_Header_Size" label="Header Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="50" inputProps={{ className: classes.initVal }} />
       <TextField fullWidth id="text_Packet_Size" label="Packet Size (bits)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="200" inputProps={{ className: classes.initVal }} />
-      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="" inputProps={{ className: classes.initVal }} />
+      <TextField fullWidth id="text_Routing_Delay" label="Packet Routing Delay (secs)" variant="outlined" margin="dense" className={classes.initVal} disabled defaultValue="1" inputProps={{ className: classes.initVal }} />
       <Button variant="contained" className={classes.animate} onClick={animateSimulation}>Animate</Button>
 
     </div>

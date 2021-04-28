@@ -1,6 +1,6 @@
 //totalsize, number, header, datasize, object, location, destination, start
 export default class Packet{
-    constructor(packetNo, size, header, datasize, obj, start, destination){
+    constructor(packetNo, size, header, datasize, obj, start, destination, total){
         this.packetNumber = packetNo;
         this.size = size;
         this.header = header;
@@ -8,5 +8,6 @@ export default class Packet{
         this.object = obj;
         this.startNode = start;
         this.destinationNode = destination;
+        this.totalPackets = total;
     }
 }

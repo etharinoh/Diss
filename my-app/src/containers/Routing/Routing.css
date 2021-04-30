@@ -1,0 +1,13 @@
+.Example{
+    display: block;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    height: 45vh
+  }
+  .Dijkstra{
+    display: block;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+  }

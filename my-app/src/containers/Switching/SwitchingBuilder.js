@@ -1,7 +1,7 @@
 //This is where i create the screen for explaining how packet switching is performed with some explanation
 import Navigation from "../../components/navigation";
 import { ReactComponent as Circuit_Img } from '../../assets/Images/Switching/Switching_Circuit.svg';
-import { ReactComponent as Packet_Img } from '../../assets/Images/Switching/Switching_Packet.svg';
+import Packet_Img  from '../../assets/Images/Switching_Packet.png';
 
 
 
@@ -50,7 +50,7 @@ const Packet = (props) => (
         creating the file that has been sent. A packet has a payload and control information, this uses Store and Forward technique,
         store the packet then forward. This is the best for small data.
 </p>
-        <Packet_Img />
+        <img src={Packet_Img} />
         <h2>Datagram Packet Switching</h2>
         <p>In this each packet can move independently, they will contain all necessary addressing information such as source address, destination address and
         port numbers. Packets can take different routes so when they arrive they could not be in the correct order, there is no connection or

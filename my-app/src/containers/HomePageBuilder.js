@@ -3,7 +3,7 @@ import Navigation from "../components/navigation";
 import React from 'react';
 import { Grid, SvgIcon, Paper, makeStyles} from '@material-ui/core';
 
-import {ReactComponent as Topology_Img} from '../assets/Images/Topologies_Redirect_All.svg';
+import Topology_Img from '../assets/Images/Topologies_Redirect_All.png';
 import {ReactComponent as Switching_Img} from '../assets/Images/Switching_Redirect_All.svg';
 import {ReactComponent as Interactive_Img} from '../assets/Images/Interactive_Redirect.svg';
 import {ReactComponent as Routing_Img} from '../assets/Images/Routing_Redirect_All.svg';
@@ -91,7 +91,7 @@ function FormRow2(){
             </Grid>
             <Grid item xs={4} className={classes.gridBotton} >
                 <Paper className={classes.paper_btn} onClick={event => window.location.href="/Diss/#/topologies"}>
-                    <Topology_Img className={classes.svg_img}/>
+                    <img src={Topology_Img} className={classes.svg_img}/>
                     <h1>Topologies Revision</h1>
                 </Paper>
             </Grid>

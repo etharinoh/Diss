@@ -5,10 +5,10 @@ import "./Topologies.css"
 import { ReactComponent as P2P_Img } from '../../assets/Images/Topologies/Topology_Point_To_Point.svg';
 import { ReactComponent as Bus_Img } from '../../assets/Images/Topologies/Topology_Bus.svg';
 import { ReactComponent as Ring_Img } from '../../assets/Images/Topologies/Topology_Ring.svg';
-import { ReactComponent as Hybrid_Img } from '../../assets/Images/Topologies/Topology_Hybrid.svg';
+import Hybrid_Img from '../../assets/Images/Topology_Hybrid.png';
 import { ReactComponent as Mesh_Partial_Img } from '../../assets/Images/Topologies/Topology_Mesh_Partial.svg';
 import { ReactComponent as Mesh_Full_Img } from '../../assets/Images/Topologies/Topology_Mesh_Full.svg';
-import { ReactComponent as Star_Img } from '../../assets/Images/Topologies/Topology_Star.svg';
+import Star_Img from '../../assets/Images/Topologies_Star.png';
 import { ReactComponent as Tree_Img } from '../../assets/Images/Topologies/Topology_Tree.svg';
 import { Table, TableCell, TableContainer, TableHead, TableRow, Paper, TableBody } from "@material-ui/core";
 import { makeStyles } from '@material-ui/core/styles';
@@ -59,7 +59,7 @@ const TopologiesBuilder = (props) => (
             <p>This is the most basic kind of network that you can have, where a node will have a dedicated connection to another, be it physical or wireless.
             This is the building block which will be used for creating any topology as it is how two nodes are connected.</p>
             <h2>Star</h2>
-            <Star_Img />
+            <img src={Star_Img} />
             {CreateTable(star)}
             <p>This is one of the basic network topologies where each of the nodes in a network are connected to one central node which is usually a server.
             This can be seen in the diagram above and gets its name from its appearance.</p>
@@ -92,7 +92,7 @@ const TopologiesBuilder = (props) => (
             <p>The hybrid topology is different to the others as this is not a uniquely defined topology itself, as a hybrid topology is the combination
             of any two or more topologies. Due to this fact it means that hybrid topologies would be prone to any advantages and disadvantages of the
              topologies which form them.</p>
-            <Hybrid_Img />
+            <img src={Hybrid_Img} />
             {CreateTable(hybrid)}
         </div>
     </div>

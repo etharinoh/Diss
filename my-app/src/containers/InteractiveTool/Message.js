@@ -6,8 +6,5 @@ export default class Message{
             this.startNode = Start;
             this.destinationNode = Destination;
     }
-    findRoute(){
-
-    }
 
 }

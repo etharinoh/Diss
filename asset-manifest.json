@@ -1,14 +1,14 @@
 {
   "files": {
-    "main.css": "/Diss/static/css/main.f5212088.chunk.css",
-    "main.js": "/Diss/static/js/main.629e7d4c.chunk.js",
-    "main.js.map": "/Diss/static/js/main.629e7d4c.chunk.js.map",
+    "main.css": "/Diss/static/css/main.ddf95024.chunk.css",
+    "main.js": "/Diss/static/js/main.544e2a09.chunk.js",
+    "main.js.map": "/Diss/static/js/main.544e2a09.chunk.js.map",
     "runtime-main.js": "/Diss/static/js/runtime-main.faeaf018.js",
     "runtime-main.js.map": "/Diss/static/js/runtime-main.faeaf018.js.map",
     "static/js/2.697373ad.chunk.js": "/Diss/static/js/2.697373ad.chunk.js",
     "static/js/2.697373ad.chunk.js.map": "/Diss/static/js/2.697373ad.chunk.js.map",
     "index.html": "/Diss/index.html",
-    "static/css/main.f5212088.chunk.css.map": "/Diss/static/css/main.f5212088.chunk.css.map",
+    "static/css/main.ddf95024.chunk.css.map": "/Diss/static/css/main.ddf95024.chunk.css.map",
     "static/js/2.697373ad.chunk.js.LICENSE.txt": "/Diss/static/js/2.697373ad.chunk.js.LICENSE.txt",
     "static/media/DJ_Example_S1.f74aa942.png": "/Diss/static/media/DJ_Example_S1.f74aa942.png",
     "static/media/DJ_Example_S2.58df8948.png": "/Diss/static/media/DJ_Example_S2.58df8948.png",
@@ -39,7 +39,7 @@
   "entrypoints": [
     "static/js/runtime-main.faeaf018.js",
     "static/js/2.697373ad.chunk.js",
-    "static/css/main.f5212088.chunk.css",
-    "static/js/main.629e7d4c.chunk.js"
+    "static/css/main.ddf95024.chunk.css",
+    "static/js/main.544e2a09.chunk.js"
   ]
 }

@@ -28,13 +28,19 @@
     height: 100%;
 }
 #init_val{
-    height: 53vh;
+    height: fit-content;
+    padding-left: 2%;
+    padding-right: 2%;
+}
+
+#initial_container{
+    height: fit-content;
     padding-left: 2%;
     padding-right: 2%;
 }
 
 #console{
-    height:40vh;
+    position: relative;
     width: 100%;
 }
 #consoleText{
@@ -48,4 +54,7 @@ p, label{
 .MuiInputBase-root{
     width: 90%;
     background-color: #3b3b3b;
+}
+#Interactive_whole{
+    overflow: hidden;
 }

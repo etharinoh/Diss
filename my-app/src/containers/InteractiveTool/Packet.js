@@ -1,4 +1,6 @@
-//totalsize, number, header, datasize, object, location, destination, start
+/**
+ * Class object for defining a packet
+ */
 export default class Packet{
     constructor(packetNo, size, header, datasize, obj, start, destination, total){
         this.packetNumber = packetNo;

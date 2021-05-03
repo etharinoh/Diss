@@ -1,5 +1,3 @@
-import { RGB_ETC1_Format } from "three";
-
 export default class Node {
     constructor(name, circle) {
         this.name = name;

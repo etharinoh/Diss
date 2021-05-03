@@ -34,18 +34,18 @@ const button_options = {
 var buttonChecked = button_options.NONE;
 
 
-
+//Global variables needed for ThreeJS
 var scene = new THREE.Scene();
 var camera;
 var renderer = new THREE.WebGLRenderer();
 var container;
 
 /**
- * 
+ * THis is the class which is used to add the scene and setup animation and events for it
  */
 class Tool extends Component {
   componentDidMount() {
-
+    
     container = document.getElementById('canvas');
     renderer.setSize(container.clientWidth, container.clientHeight);
 
@@ -70,10 +70,11 @@ class Tool extends Component {
 
 
 
-
+  /**
+   * This is used for handling which method is used when the canvas is clicked
+   * @param {*} event the event when it has been triggered
+   */
   clickHandler = (event) => {
-
-
     switch (buttonChecked) {
       case button_options.ADDNODE:
         addNode(event);
@@ -115,9 +116,9 @@ class Tool extends Component {
  */
 function listenResize() {
 
-  //camera.aspect = (container.clientWidth / container.clientHeight);
   camera.updateProjectionMatrix();
   renderer.setSize(container.clientWidth, container.clientHeight);
+  //camera.aspect = container.clientWidth / container.clientHeight
 
 }
 
@@ -125,8 +126,9 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 var nodeCount = 1;
 /**
+ * This is the method for adding a node to the canvas 
  * 
- * @param {*} event 
+ * @param {*} event This is the event which is used to know where the mouse position is
  */
 function addNode(event) {
   {
@@ -157,9 +159,11 @@ function addNode(event) {
 var intersects = [];
 var nodes = [];
 var connectionCount = 0;
+
 /**
+ * This will check how many nodes have been selected, if none are selected highlight the selected, if one is selected then a line is connected between them
  * 
- * @param {*} event 
+ * @param {*} event The event used for where the mouse click was
  */
 function addConnection(event) {
   const MATERIAL = new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 30 });
@@ -203,6 +207,11 @@ function addConnection(event) {
     }
   }
 }
+/**
+ * This is used to check if a node is a sender or reciever before changing its color back
+ * 
+ * @param {*} node The node whos node needs its color changing back
+ */
 function changeColor(node){
   var snd = false, rec = false;
   SndRecArray.forEach(pair =>{
@@ -224,9 +233,10 @@ function changeColor(node){
   }
 }
 /**
+ * This is the auxillary function using threejs raycaster to select a node from the scene.
  * 
- * @param {*} event 
- * @returns 
+ * @param {*} event This is the event used to find the mouse position
+ * @returns Either the first intersect or the number 0
  */
 function findNode(event) {
   //draw a line by selecting two circle, raycaster, highlight
@@ -253,15 +263,16 @@ function findNode(event) {
 }
 
 /**
+ * Calls the find node to select a node and then removes th3e node and all of its connections.
  * 
- * @param {*} event 
+ * @param {*} event The event when this is called
  */
 function removeNode(event) {
   //If a node is clicked, remove the node and any connections that it has
   var toRemove = findNode(event);
 
   for (let value of connectionMap.values()) {
-    if ((toRemove == value.fromNode) || (toRemove == value.toNode)) {
+    if ((toRemove == value.fromNode.circleObject) || (toRemove == value.toNode.circleObject)) {
       removeSelected(value.connectorObj);
     }
   }
@@ -269,8 +280,9 @@ function removeNode(event) {
   scene.remove(toRemove);
 }
 /**
+ * This is used to select and remove a connection, but there are issues with selection
  * 
- * @param {*} event 
+ * @param {*} event The event when this is called for raycasting
  */
 function removeConnection(event) {
   //If a connection is clicked delete it
@@ -284,9 +296,10 @@ function removeConnection(event) {
   }
 }
 /**
+ * This is used to select a connection, but has issues with raycasting
  * 
- * @param {*} event 
- * @returns 
+ * @param {*} event used to find the mouse point where clicked
+ * @returns their the intersect or 0
  */
 function findConnection(event) {
   mouse.x = ((event.clientX - renderer.domElement.offsetLeft) / renderer.domElement.clientWidth) * 2 - 1;
@@ -304,16 +317,18 @@ function findConnection(event) {
   }
 }
 /**
+ * This is used to remove a selected node from the scene and connection map
  * 
- * @param {*} selected 
+ * @param {*} selected The selected node
  */
-function removeSelected(selected) { //TODO make sure everything is deleted
+function removeSelected(selected) { 
   connectionMap.delete(selected.name);
   scene.remove(selected);
 }
 /**
+ * THis is used to return information of abhout the selected node to the console.
  * 
- * @param {*} event 
+ * @param {*} event USed for finding the node
  */
 function inspectNode(event) {
   var chosen = findNode(event);
@@ -326,8 +341,9 @@ function inspectNode(event) {
 }
 var selected = 0;
 /**
+ * This is used to move a node from one position to the next selected position
  * 
- * @param {*} event 
+ * @param {*} event used to find and move the node
  */
 function moveNode(event) {
 
@@ -368,8 +384,9 @@ function moveNode(event) {
 }
 var sender, reciever;
 /**
+ * This is used to create a sender reciever pair and add it to the array
  * 
- * @param {*} event 
+ * @param {*} event Used for finding the node
  */
 function sendRevPair(event) {
   var chosenNode = findNode(event);
@@ -408,7 +425,7 @@ class InteractiveBuilder extends Component {
   }
   render() {
     return (
-      <div id="Interactive_whole">
+      <div id="Interactive_whole" >
         <Navigation />
         <div id="Interactive_Container">
 
@@ -419,10 +436,13 @@ class InteractiveBuilder extends Component {
             <Tool />
           </div>
           <div id="right">
+          <Grid container spacing={1}>
             <div id="init_val">
               <p>Initial Values</p>
               <InitialValues />
             </div>
+            </Grid>
+            <Grid container spacing={1}>
             <div id="console">
               <p>Console</p>
               <TextField
@@ -435,7 +455,7 @@ class InteractiveBuilder extends Component {
                 disabled
                 fullWidth={true}
               />
-            </div>
+            </div></Grid>
           </div>
         </div>
       </div>
@@ -473,6 +493,11 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+/**
+ * Setup for the buttons and their onclick methods
+ * 
+ * @returns the group of buttons
+ */
 function ButtonsGroup() {
   return (
     <div>
@@ -480,7 +505,7 @@ function ButtonsGroup() {
         <Button className={useStyles().state_button} onClick={addNodeClick} id="AddNode"> Add Node</Button>
         <Button className={useStyles().state_button} onClick={addConnectionClick} id="AddConnection"> Add Connection</Button>
         <Button className={useStyles().state_button} onClick={removeNodeClick} id="RemoveNode"> Remove Node</Button>
-        <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection"> Remove Connection (DISABLED)</Button>
+        <Button className={useStyles().state_button} onClick={removeConnectionClick} id="RemoveConnection" disabled> Remove Connection (DISABLED)</Button>
       </Grid>
       <Grid item>
         <Button className={useStyles().state_button} onClick={moveNodeClick} id="MoveNode"> Move Node</Button>
@@ -493,27 +518,26 @@ function ButtonsGroup() {
     </div>
   )
 }
+/**
+ * Changes the selected button to add node, if it is already selected it is cleared
+ */
 function addNodeClick() {
   if (buttonChecked == button_options.ADDNODE) {
-    //Clear colours
     buttonChecked = button_options.NONE;
   }
   else {
-    //Clear button method, change to selected
     buttonChecked = button_options.ADDNODE;
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
 /**
- * 
+ * Changes the selected button to remove node, if it is already selected it is cleared
  */
 function removeNodeClick() {
   if (buttonChecked == button_options.REMOVENODE) {
-    //Clear colours
     buttonChecked = button_options.NONE;
   }
   else {
-    //Clear button method, change to selected
     buttonChecked = button_options.REMOVENODE;
   }
   consoleAdd("Button Selected: " + buttonChecked);
@@ -523,29 +547,27 @@ function removeNodeClick() {
  */
 function addConnectionClick() {
   if (buttonChecked == button_options.ADDCONNECT) {
-    //Clear colours
     buttonChecked = button_options.NONE;
   }
   else {
-    //Clear button method, change to selected
     buttonChecked = button_options.ADDCONNECT;
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+
 /**
- * this calls the moethod for removing a connection
+ * this calls the method for removing a connection
  */
 function removeConnectionClick() {
   if (buttonChecked == button_options.REMOVECONNECT) {
-    //Clear colours
     buttonChecked = button_options.NONE;
   }
   else {
-    //Clear button method, change to selected
     buttonChecked = button_options.REMOVECONNECT;
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+
 /**
  * This handles the input mode for moving a node
  */
@@ -560,6 +582,7 @@ function moveNodeClick() {
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+
 /**
  * handles pressing the input button for creating a sender reciver pair
  */
@@ -589,6 +612,7 @@ function inspectNodeClick() {
   }
   consoleAdd("Button Selected: " + buttonChecked);
 }
+
 /**
  * This funciton will clear all of the console, globals, and the objects from the scene
  */
@@ -596,11 +620,11 @@ function clear() {
   consoleClear();
   buttonChecked = button_options.NONE;
   clearGlobals();
-  while(scene.children.length > 0){ 
+  while(scene.children.length > 0){  //removes all children from the scene
     scene.remove(scene.children[0]); 
+  }
 }
-  //clear everythinng of use, maps, queues connections, objects in scene
-}
+
 /**
  * This will clear any global variables so that they will not impact the program's next run
  */
@@ -610,6 +634,7 @@ function clearGlobals() {
   tweenArr = []
 
 }
+
 //Initial Values variables.
 var Switching_Method;
 var TransDelay;
@@ -628,8 +653,9 @@ var SndRecArray = [];
 var tweenArr = [];
 var circMessageTimePerJump;
 var totalSwitchTime;
+
 /**
- * 
+ * Method for starting circuit siwthcing for all sender receiver pairs
  */
 function startCircuitSw() {
   //findbest route
@@ -646,12 +672,12 @@ function startCircuitSw() {
     }
 
   }
-
-  //Get all the connection objects and change their color to 
 }
+
 /**
+ * This performs the circuit swithcing for each indiviual sender receiver pairs
  * 
- * @param {*} pair 
+ * @param {*} pair The sender receiver to perform this on
  */
 function startIndSw(pair) {
   var chosenRoute = findBestRoute(pair); //output chosen route
@@ -681,13 +707,13 @@ function startIndSw(pair) {
   setTimeout(() => { message = createMessage(pair, connArray) }, CircSetupTime);
   setTimeout(() => { breakdownConnection(pair, connArray); scene.remove(message)}, totalSwitchTime);
   
-
-  //Reset eveything
 }
+
 /**
+ * Finds the best route by calling the findRoutes method
  * 
- * @param {*} sendRecPair 
- * @returns 
+ * @param {*} sendRecPair The sender receiver pairs to find the  routes between
+ * @returns The best route
  */
 function findBestRoute(sendRecPair) {
 
@@ -708,14 +734,24 @@ function findBestRoute(sendRecPair) {
   })
   return bestRoute;
 }
-function clone(A) {
-  return JSON.parse(JSON.stringify(A));
-}
-var invConnMap = new Map;
 /**
+ * THis is used to clone an object due to an issue with javascript object references
  * 
- * @param {*} sendRecPair 
- * @returns 
+ * @param {*} A the array object to be copied
+ * @returns A copy of the array which was provided
+ */
+function clone(Array) {
+  return JSON.parse(JSON.stringify(Array));
+}
+  
+var invConnMap = new Map;
+
+/**
+ * THis is the function which calls the a recusive function to reutnr all of the routes from sender to receiver
+ * built and refined from the java example at: https://www.geeksforgeeks.org/find-paths-given-source-destination/
+ * 
+ * @param {*} sendRecPair the pair of sender and receiver
+ * @returns all routes from sender to receiver
  */
 function findRoutes(sendRecPair) {
   var start = sendRecPair.sender;
@@ -724,18 +760,18 @@ function findRoutes(sendRecPair) {
   var pathList = [start.name];
   var routes = [];
   /**
+   * This is the recursive loop for finding each route
    * 
-   * @param {*} currentNode 
-   * @param {*} destinationNode 
-   * @param {*} isVisited 
-   * @param {*} local 
-   * @param {*} myArray 
-   * @returns 
+   * @param {*} currentNode current node to check
+   * @param {*} destinationNode the goal node
+   * @param {*} isVisited a map of nodes names to if they are visited for not
+   * @param {*} local this is the array holding the path local to each
+   * @returns all found routes
    */
-  function findRoutesRec(currentNode, destinationNode, isVisited, local, myArray = [[]]) {
+  function findRoutesRec(currentNode, destinationNode, isVisited, local) {
     var otherNode;
     var found;
-    //from start node check all connections, if 
+    //base case for finding the destination node
     if (currentNode == destinationNode) {
       var currentRoute = clone(local);
       routes.push(currentRoute);
@@ -751,10 +787,10 @@ function findRoutes(sendRecPair) {
       else {
         otherNode = connection.fromNode;
       }
-
+      //if the node hasnt yet been visited, add the new node and recurse.
       if (!isVisited.get(otherNode.name)) {
         local.push(otherNode.name);
-        found = findRoutesRec(otherNode, destinationNode, isVisited, local, myArray);
+        found = findRoutesRec(otherNode, destinationNode, isVisited, local);
         local.pop();
         return routes;
       }
@@ -762,17 +798,18 @@ function findRoutes(sendRecPair) {
     );
     isVisited.set(currentNode.name, false);
   }
-  findRoutesRec(start, end, isVisited, pathList, []);
+  findRoutesRec(start, end, isVisited, pathList );
   return routes;
 }
 /**
+ * Sets up the connection, highlighting the route
  * 
- * @param {*} pair 
- * @param {*} route 
- * @param {*} setupTime 
+ * @param {*} pair The sender receiver pair to be performed on
+ * @param {*} route The route to setup along
+ * @param {*} setupTime The amount of time that it will take
  * @returns 
  */
-function setupConnection(pair, route, setupTime) { //circuit setuptime / Amount of stops in route
+function setupConnection(pair, route, setupTime) { 
   var timeForEach = (setupTime / route.length);
   for (let index = 0; index < route.length; index++) {
     const connection = route[index];
@@ -791,9 +828,10 @@ function setupConnection(pair, route, setupTime) { //circuit setuptime / Amount 
   return;
 }
 /**
+ * This performs the setup for each connection
  * 
- * @param {*} pair 
- * @param {*} connection 
+ * @param {*} pair sender receiver pair it is on
+ * @param {*} connection the connection to perform it on
  */
 function setupEach(pair, connection) {
   connection.connectorObj.material.color.set(0xF2E9AF);
@@ -811,9 +849,10 @@ function setupEach(pair, connection) {
   }
 }
 /**
+ * Used to breakdown the connection after a message has been sent
  * 
- * @param {*} pair 
- * @param {*} route 
+ * @param {*} pair the sender and receiver pair
+ * @param {*} route the route of connections
  * @returns 
  */
 function breakdownConnection(pair, route) {
@@ -833,6 +872,12 @@ function breakdownConnection(pair, route) {
   tweenArr = []
   return;
 }
+/**
+ * Breaks down for each connection
+ * 
+ * @param {*} pair the sender and receiver pair
+ * @param {*} connection The current connections
+ */
 function breakEach(pair, connection) {
   connection.connectorObj.material.color.set(0xFFFFFF);
   var currentConObj = connectionMap.get(connection.connectorObj.name);
@@ -849,10 +894,11 @@ function breakEach(pair, connection) {
   }
 }
 /**
+ * This creates the message and sets up the message for each connection
  * 
- * @param {*} sndRec 
- * @param {*} route 
- * @returns 
+ * @param {*} sndRec the sender and receiver pair
+ * @param {*} route The routem to be taken
+ * @returns the message object
  */
 function createMessage(sndRec, route) {
   var startNode = sndRec.sender.circleObject;
@@ -889,12 +935,13 @@ function createMessage(sndRec, route) {
   return plane;
 }
 /**
+ * This will setupd the tweens for each message and chain them to eachother
  * 
- * @param {*} message 
- * @param {*} position 
- * @param {*} target 
- * @param {*} invert 
- * @returns 
+ * @param {*} message the message object 
+ * @param {*} position The position to send from
+ * @param {*} target THe position to send to
+ * @param {*} invert wether or not the connection was inverted
+ * @returns the message object
  */
 function setupMessage(message, position, target, invert) {
 
@@ -927,12 +974,12 @@ function setupMessage(message, position, target, invert) {
     tweenArr.push(tween);
   }
   return message;
-  //use tween.delay(); for (packet routing delay)
 }
 /**
+ * Creates the information for each packet
  * 
- * @param {*} pair 
- * @param {*} method 
+ * @param {*} pair the sender and receiver pair
+ * @param {*} method wether it is virtual circuit or datagram
  * @returns 
  */
 function createPacketInfo(pair, method) {
@@ -970,12 +1017,13 @@ function createPacketInfo(pair, method) {
 }
 const MAX_PACKET_SIZE = 900
 /**
+ * This will create the individual packet
  * 
- * @param {*} packetNo 
- * @param {*} pair 
- * @param {*} dataSize 
- * @param {*} totalNo 
- * @returns 
+ * @param {*} packetNo the number of this packet
+ * @param {*} pair the sender and receiver pair
+ * @param {*} dataSize size of the data for this object
+ * @param {*} totalNo total number of packets
+ * @returns the packet object
  */
 function createPacket(packetNo, pair, dataSize, totalNo) {
   var validPkt, validHead
@@ -1009,11 +1057,12 @@ function createPacket(packetNo, pair, dataSize, totalNo) {
 }
 var packetRecieved = new Map
 /**
+ * Sends a packet for datagram packet switching
  * 
- * @param {*} packet 
- * @param {*} connection 
- * @param {*} inv 
- * @param {*} totalPackets 
+ * @param {*} packet The packet
+ * @param {*} connection the connection it is on
+ * @param {*} inv wehter it is inverted or not
+ * @param {*} totalPackets total number of packets
  */
 function sendPacketDG(packet, connection, inv, totalPackets) {
   //consider inversion
@@ -1043,7 +1092,7 @@ function sendPacketDG(packet, connection, inv, totalPackets) {
     }
     originalNode.dequeue();
     connection.finished();
-    var found = bestConn(currentNode);
+    var found = bestConn(currentNode, packet.destinationNode.name);
     if (typeof found !== 'undefined') {
 
 
@@ -1087,7 +1136,7 @@ function sendPacketDG(packet, connection, inv, totalPackets) {
   tween.start();
 }
 /**
- * 
+ * tells each node to create its routing table, and starts packet switching for datagram
  */
 function startPktSwitchDG() {
   for (let i = 0; i < SndRecArray.length; i++) {
@@ -1124,7 +1173,7 @@ function startPktSwitchDG() {
 
 
           setTimeout(() => {
-            var found = bestConn(pair.sender)
+            var found = bestConn(pair.sender, pair.reciever.name)
             if (typeof found !== 'undefined') {
               consoleAdd("sending packet " + packet.packetNumber)
               sendPacketDG(packet, found.conn, found.invert, packets.p - 1)
@@ -1140,28 +1189,25 @@ function startPktSwitchDG() {
   }
 }
 /**
+ * choses the best connection from the routing table
  * 
- * @param {*} node 
- * @returns 
+ * @param {*} node the node which they are currently at
+ * @param {*} rec the receiver node
+ * @returns returns the choice or the first route
  */
-function bestConn(node) {
-  var chosen;
-  var shortestJump;
-  var queue = false;
-  var lowestJumps = 0;
-  for (let index = 0; index < node.allRoutes().length; index++) {
-    const choice = node.allRoutes()[index];
+function bestConn(node, rec) {
+  for (let index = 0; index < node.routesTo(rec).length; index++) {
+    const choice = node.routesTo(rec)[index];
     if (!choice.conn.inUse) {
       return choice
     }
 
   }
-  return node.allRoutes()[0];
+  return node.routesTo(rec)[0];
 
 }
 /**
- * 
- * 
+ * Starts packet switching for virtual circuit
  */
 function startPktSwitchVC() {
   //choses the best route using the same method as circuit switch
@@ -1198,10 +1244,11 @@ function startPktSwitchVC() {
   }
 }
 /**
+ * Sends each packet from the start node
  * 
- * @param {*} sndRec 
- * @param {*} route 
- * @param {*} packets 
+ * @param {*} sndRec the sender and receiver pair
+ * @param {*} route the route to be taken
+ * @param {*} packets the array of packets with data
  */
 function sendPacketsVC(sndRec, route, packetsData) {
   var timeForEach = packetsData.time / route.length;
@@ -1211,18 +1258,17 @@ function sendPacketsVC(sndRec, route, packetsData) {
       const packet = packetsData.p[index]
       setTimeout(() => { createSendPacket(sndRec, route, packet, timeForEach, route, packetsData.p.length - 1) }, (timeForEach * index));
     })(index)
-
-
   }
 
 }
 /**
+ * This creates the tweens for the packet and uses the routing table to chose its next connection
  * 
- * @param {*} sndRec 
- * @param {*} route 
- * @param {*} packet 
- * @param {*} time 
- * @param {*} wholeRoute 
+ * @param {*} sndRec the sender and receiver pair
+ * @param {*} route the route to take
+ * @param {*} packet the packet object
+ * @param {*} time for each transfer
+ * @param {*} wholeRoute the whole route to be taken
  * @param {*} totalPackets 
  */
 function createSendPacket(sndRec, route, packet, time, wholeRoute, totalPackets) {
@@ -1307,7 +1353,6 @@ function InitialValues() {
   const handleChange = (event) => {
     setMethod(event.target.value);
     Switching_Method = event.target.value;
-    //@TODO disable the correct fields
 
     //if circuit enable - circuit setup disable - header, packet, routing delay
     if (Switching_Method == "Circuit") {
@@ -1353,8 +1398,9 @@ function InitialValues() {
     }
   }
   /**
+   * This checks to see if the values are valid
    * 
-   * @returns 
+   * @returns if the input is valid
    */
   function validateInput() {
     inputIssues = ""
@@ -1413,10 +1459,9 @@ function InitialValues() {
   }
   var inputIssues;
   /**
-   * 
-   * @param {*} event 
+   * Starts the animation and sets the inputs
    */
-  const animateSimulation = (event) => {
+  const animateSimulation = () => {
     //take all values from below and 
     TransDelay = Number(document.getElementById("text_Trans_Delay").value);
     MsgLength = Number(document.getElementById("text_Msg_Length").value);

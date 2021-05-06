@@ -679,7 +679,7 @@ function startCircuitSw() {
  * 
  * @param {*} pair The sender receiver to perform this on
  */
-function startIndSw(pair) {
+function  startIndSw(pair) {
   var chosenRoute = findBestRoute(pair); //output chosen route
   consoleAdd("ChosenRoute: " + chosenRoute)
   var connArray = [];
@@ -1217,7 +1217,6 @@ function startPktSwitchVC() {
       var chosenRoute = findBestRoute(pair); //output chosen route
       consoleAdd("ChosenRoute: " + chosenRoute)
       var connArray = [];
-
       //Takes the found best route, and finds the connections corresponding to them
       for (let index = 0; index < chosenRoute.length - 1; index++) {
         const element = chosenRoute[index];
@@ -1435,7 +1434,7 @@ function InitialValues() {
             result = false;
             inputIssues += "Packet Size is Invalid, "
           }
-          if ((isNaN(HeaderSize)) && (HeaderSize < PktSize)) {
+          if ((isNaN(HeaderSize)) || (HeaderSize > PktSize)) {
             result = false;
             inputIssues += "Header Size is Invalid, "
           }

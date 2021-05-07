@@ -721,17 +721,10 @@ function findBestRoute(sendRecPair) {
   var shortestSteps = 0;
   var bestRoute = [];
 
-  routes.forEach(function (route) {
-    if (bestRoute.length == 0) {
-      bestRoute = route;
-      shortestSteps = route.length;
-    }
-    if (route.length < shortestSteps) {
-      bestRoute = route;
-      shortestSteps = route.size;
-
-    }
+  routes.sort(function (a, b) {
+    return a.length - b.length;
   })
+  bestRoute = routes[0];
   return bestRoute;
 }
 /**
